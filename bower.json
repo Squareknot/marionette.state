@@ -1,0 +1,33 @@
+{
+  "name": "marionette.state-service",
+  "version": "0.1.0",
+  "homepage": "https://github.com/Squareknot/marionette.state-service",
+  "authors": [
+    "ianmstew <ianmstew@gmail.com>"
+  ],
+  "description": "A manager for consolidated application, component, or view state",
+  "main": "build/marionette.state-service.js",
+  "keywords": [
+    "backbone",
+    "marionette",
+    "view",
+    "application",
+    "component",
+    "state",
+    "model",
+    "controller",
+    "manager",
+    "architecture"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components"
+  ],
+  "dependencies": {
+    "backbone": "1.0.0 - 1.1.2",
+    "backbone.marionette": "^2.1.0",
+    "underscore": "1.4.4 - 1.7.0"
+  }
+}
