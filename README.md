@@ -5,17 +5,21 @@ A manager for consolidated application, component, or view state.
 
 ## Reasoning
 
-Core Backbone philosophy maintains that all apparent visual state corresponds directly, and in fact reacts, to changes in a model.  This philosophy is implemented perfectly when each and every change to the DOM is rooted in a model change.
+Core Backbone philosophy maintains that all apparent visual state corresponds directly to model attributes, and changes in a model cause a view to update.  This philosophy is implemented perfectly when each and every change to the DOM is rooted in a model change.
 
 In an ideal Backbone app, therefore, the chief problem is mapping all possible application, component, and view states to Backbone models.  Once this problem is solved, views are only responsible for rendering the model states.
 
 Once all states are mapped to models, the second problem is triggering changes to those states.  State changes may involve business logic, enough so that separating business logic from views is an important separation of concerns.  Ideally, views should report events but never change a model directly.
 
-The two problems just described are solved succinctly with a uni-directional flow of events and state changes that operates as follows: View triggers business event -> State service processes event, applying business logic -> State service applies changes to state model -> view renders state change.
+The two problems just described are solved succinctly with a uni-directional flow of events and state changes that operates as follows:
 
-Marionette.StateService is a buisiness logic container, which only exists to 1. process business events and 2. change a state model.
+1. View/component/application triggers business event.
+2. State service receives event, applies business logic, changes state model.
+3. View renders state change.
 
-While this purpose seems narrow at first, if a Backbone app is architected as a state service driving views, this role quickly becomes the heart of the app.  Within apps demanding high interactivity, this role is only more crucial.
+<img class="diagram" src="https://docs.google.com/drawings/d/13_kBAF5IIl2MbJkPDo4rj_U0VG-QKRv8mWkkwYIJFPI/pub?w=960&amp;h=720" height=480>
+
+In essence, Marionette.StateService is a business logic container, which only exists to 1. Process business events and 2. Change a state model.  By integrating a state model into its API, StateService conveniently makes state a first-class Marionette concept.
 
 ## Installation
 
