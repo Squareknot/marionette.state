@@ -60,7 +60,7 @@ Mn.State = Mn.Object.extend({
 
   // Return state to its initial value, destructively (uses {unset:true}).
   reset: function (options) {
-    options = _.extend({unset: true}, options);
+    options = _.extend({ unset: true }, options);
     this._model.set(this._initialState, options);
   },
 

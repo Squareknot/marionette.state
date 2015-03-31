@@ -71,7 +71,7 @@ Consider the following common scenario on the component (view) level:
 
 It is easy to start writing all the logic necessary to handle state updates in the view itself and mash view state attributes into the data model, but this quickly becomes inelegant at best and a 300+ line mess at worst.  What if the state logic could be separated and the data model left to handle strictly persisted data?  The architecture might look like this:
 
-<img class="diagram" src="https://docs.google.com/drawings/d/13_kBAF5IIl2MbJkPDo4rj_U0VG-QKRv8mWkkwYIJFPI/pub?w=960&amp;h=720" height=320>
+<img class="diagram" src="https://docs.google.com/drawings/d/13_kBAF5IIl2MbJkPDo4rj_U0VG-QKRv8mWkkwYIJFPI/pub?w=960&amp;h=720" height=480>
 
 1. A view only renders _dumb updates_ of data and state.
 2. The view _triggers events_ that are handled by a service (`Marionette.State`).
