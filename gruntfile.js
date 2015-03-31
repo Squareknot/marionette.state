@@ -76,25 +76,21 @@ module.exports = function (grunt) {
     }
   });
 
-  grunt.registerTask('test', 'Test the library', [
-    'lint',
-    'mochaTest'
-  ]);
-
   grunt.registerTask('lint', 'Lint the library', [
     'jshint',
     'jscs'
   ]);
 
+  grunt.registerTask('test', 'Test the library', [
+    'lint',
+    'mochaTest'
+  ]);
+
   grunt.registerTask('build', 'Build the library', [
     'clean',
-    'lint',
+    'test',
     'preprocess:state',
     'concat',
     'uglify'
-  ]);
-
-  grunt.registerTask('default', 'An alias of build', [
-    'build'
   ]);
 };
