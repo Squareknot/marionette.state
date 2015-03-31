@@ -22,7 +22,9 @@
 }(this, function (Bb, Mn, _) {
   'use strict';
 
-  // @include marionette.state-service.js
+  // @include state.js
+  // @include state.behavior.js
+  // @include state.functions.js
 
-  return Mn.StateService;
+  return Mn.State;
 }));
