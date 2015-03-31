@@ -19,7 +19,7 @@
 
   // Curlies, brackets, parens
   "disallowSpaceAfterObjectKeys": true,
-  "requireSpacesInsideObjectBrackets": "allButNested",
+  "disallowSpacesInsideObjectBrackets": true,
   "disallowSpacesInsideArrayBrackets": true,
   "disallowSpacesInsideParentheses": true,
 

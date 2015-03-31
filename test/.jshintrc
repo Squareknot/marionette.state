@@ -40,6 +40,13 @@
   "globals": {
     "_": false,
     "Bb": false,
-    "Mn": false
+    "Mn": false,
+    "window": false,
+    "require": false,
+    "expect": false,
+    "describe": false,
+    "beforeEach": false,
+    "afterEach": false,
+    "it": false
   }
 }

@@ -7,13 +7,17 @@ module.exports = function (grunt) {
     pkg: grunt.file.readJSON('package.json'),
     meta: {
       version: '<%= pkg.version %>',
-      banner: '// Marionette.StateService v<%= meta.version %>\n'
+      banner: '// Marionette.State v<%= meta.version %>\n'
+    },
+
+    clean: {
+      build: 'build'
     },
 
     preprocess: {
-      stateService: {
+      state: {
         src: 'src/wrapper.js',
-        dest: 'build/marionette.state-service.js'
+        dest: 'build/marionette.state.js'
       }
     },
 
@@ -21,9 +25,9 @@ module.exports = function (grunt) {
       options: {
         banner: '<%= meta.banner %>'
       },
-      stateService: {
-        src: '<%= preprocess.stateService.dest %>',
-        dest: '<%= preprocess.stateService.dest %>'
+      state: {
+        src: '<%= preprocess.state.dest %>',
+        dest: '<%= preprocess.state.dest %>'
       }
     },
 
@@ -31,17 +35,32 @@ module.exports = function (grunt) {
       options: {
         banner: '<%= meta.banner %>'
       },
-      stateService: {
-        src: '<%= preprocess.stateService.dest %>',
-        dest: 'build/marionette.stateService.min.js',
+      state: {
+        src: '<%= preprocess.state.dest %>',
+        dest: 'build/marionette.state.min.js',
         options: {
           sourceMap: true
         }
       }
     },
 
+    mochaTest: {
+      spec: {
+        options: {
+          require: 'test/setup/node.js',
+          reporter: 'dot',
+          clearRequireCache: true,
+          mocha: require('mocha')
+        },
+        src: [
+          'test/setup/helpers.js',
+          'test/spec/*.js'
+        ]
+      }
+    },
+
     jshint: {
-      stateService: {
+      state: {
         options: {
           jshintrc: '.jshintrc'
         },
@@ -57,14 +76,20 @@ module.exports = function (grunt) {
     }
   });
 
+  grunt.registerTask('test', 'Test the library', [
+    'lint',
+    'mochaTest'
+  ]);
+
   grunt.registerTask('lint', 'Lint the library', [
     'jshint',
     'jscs'
   ]);
 
   grunt.registerTask('build', 'Build the library', [
+    'clean',
     'lint',
-    'preprocess:stateService',
+    'preprocess:state',
     'concat',
     'uglify'
   ]);
