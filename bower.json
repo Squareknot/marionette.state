@@ -1,12 +1,12 @@
 {
-  "name": "marionette.state-service",
+  "name": "marionette.state",
   "version": "0.1.0",
-  "homepage": "https://github.com/Squareknot/marionette.state-service",
+  "homepage": "https://github.com/Squareknot/marionette.state",
   "authors": [
     "ianmstew <ianmstew@gmail.com>"
   ],
-  "description": "A manager for consolidated application, component, or view state",
-  "main": "build/marionette.state-service.js",
+  "description": "One-way data flow architecture for stateful components within a Backbone.Marionette app.",
+  "main": "build/marionette.state.js",
   "keywords": [
     "backbone",
     "marionette",
@@ -17,13 +17,20 @@
     "model",
     "controller",
     "manager",
-    "architecture"
+    "architecture",
+    "one",
+    "way",
+    "data",
+    "binding"
   ],
   "license": "MIT",
   "ignore": [
-    "**/.*",
-    "node_modules",
-    "bower_components"
+    "src",
+    "test",
+    ".gitignore",
+    ".jscsrc",
+    ".jshintrc",
+    "gruntfile.js"
   ],
   "dependencies": {
     "backbone": "1.0.0 - 1.1.2",

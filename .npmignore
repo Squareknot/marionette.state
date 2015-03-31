@@ -1,0 +1,6 @@
+src
+test
+.gitignore
+.jscsrc
+.jshintrc
+gruntfile.js
