@@ -7,7 +7,7 @@ One-way data flow architecture for stateful components within a Backbone.Marione
 
 ```
 git clone git://github.com/Squareknot/marionette.state.git
-bower install marionette.state
+bower install marionette-state
 npm install marionette.state
 ```
 
