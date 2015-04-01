@@ -3,4 +3,6 @@ test
 .gitignore
 .jscsrc
 .jshintrc
+.npmignore
+bower.json
 gruntfile.js
