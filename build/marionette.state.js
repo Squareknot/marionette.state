@@ -1,11 +1,11 @@
-// Marionette.State v0.2.1
+// Marionette.State v0.2.2
 /* global define */
 
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
     define([
       'backbone',
-      'marionette',
+      'backbone.marionette',
       'underscore'
     ], function (Backbone, Marionette, _) {
       return factory(Backbone, Marionette, _);
@@ -13,7 +13,7 @@
   }
   else if (typeof exports !== 'undefined') {
     var Backbone = require('backbone');
-    var Marionette = require('marionette');
+    var Marionette = require('backbone.marionette');
     var _ = require('underscore');
     module.exports = factory(Backbone, Marionette, _);
   }

@@ -1,3 +1,11 @@
+v0.2.2 [Commit Log](https://github.com/Squareknot/marionette.state/compare/v0.2.1...v0.2.2)
+
+- Fixed require dependency issue
+
+v0.2.1 [Commit Log](https://github.com/Squareknot/marionette.state/compare/v0.2.0...v0.2.1)
+
+- Fixed npm dependency issue
+
 v0.2.0 [Commit Log](https://github.com/Squareknot/marionette.state/compare/v0.1.0...v0.2.0)
 
 - Renamed to concise Marionette.State
