@@ -1,11 +1,11 @@
-// Marionette.State v0.2.0
+// Marionette.State v0.2.1
 /* global define */
 
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
     define([
       'backbone',
-      'backbone.marionette',
+      'marionette',
       'underscore'
     ], function (Backbone, Marionette, _) {
       return factory(Backbone, Marionette, _);
@@ -13,7 +13,7 @@
   }
   else if (typeof exports !== 'undefined') {
     var Backbone = require('backbone');
-    var Marionette = require('backbone.marionette');
+    var Marionette = require('marionette');
     var _ = require('underscore');
     module.exports = factory(Backbone, Marionette, _);
   }
@@ -85,7 +85,7 @@
   
     // Return state to its initial value, destructively (uses {unset:true}).
     reset: function (options) {
-      options = _.extend({unset: true}, options);
+      options = _.extend({ unset: true }, options);
       this._model.set(this._initialState, options);
     },
   

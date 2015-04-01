@@ -1,7 +1,7 @@
 {
   "name": "marionette.state",
   "description": "One-way data flow architecture for stateful components within a Backbone.Marionette app.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "homepage": "https://github.com/Squareknot/marionette.state",
   "main": "build/marionette.state.js",
   "keywords": [
