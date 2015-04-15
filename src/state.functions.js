@@ -45,7 +45,7 @@
     _.each(bindings, function (handlers, eventStr) {
       var events = eventStr.split(spaceMatcher);
       syncBindings(target, entity, events, handlers);
-    }, this);
+    });
   }
 
   _.extend(Mn.State, {

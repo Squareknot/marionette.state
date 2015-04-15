@@ -93,4 +93,6 @@ module.exports = function (grunt) {
     'concat',
     'uglify'
   ]);
+
+  grunt.registerTask('default', 'Default task is build', ['build']);
 };

@@ -58,7 +58,7 @@ Mn.State.Behavior = Mn.Behavior.extend({
     var stateOptionValue;
 
     // Boolean true is an identity transformation; e.g., { stateOption: 'stateOption' }
-    if (stateOptionKey === true) {
+    if (viewOptionKey === true) {
       stateOptionValue = this.view.options[stateOptionKey];
     }
     // Unwind nested keys; e.g., 'value.property.subproperty'
@@ -72,7 +72,7 @@ Mn.State.Behavior = Mn.Behavior.extend({
       stateOptionValue = viewOptionKey.call(this.view, this.view.options);
     }
     else {
-      throw new Mn.Error('Invalid mapOption type');
+      throw new Mn.Error('Invalid mapOption value. Expecting true, String, or Function.');
     }
 
     return [stateOptionKey, stateOptionValue];
