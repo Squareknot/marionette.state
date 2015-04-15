@@ -188,7 +188,7 @@
       var stateOptionValue;
   
       // Boolean true is an identity transformation; e.g., { stateOption: 'stateOption' }
-      if (stateOptionKey === true) {
+      if (viewOptionKey === true) {
         stateOptionValue = this.view.options[stateOptionKey];
       }
       // Unwind nested keys; e.g., 'value.property.subproperty'
@@ -202,7 +202,7 @@
         stateOptionValue = viewOptionKey.call(this.view, this.view.options);
       }
       else {
-        throw new Mn.Error('Invalid mapOption type');
+        throw new Mn.Error('Invalid mapOption value. Expecting true, String, or Function.');
       }
   
       return [stateOptionKey, stateOptionValue];
@@ -293,7 +293,7 @@
       _.each(bindings, function (handlers, eventStr) {
         var events = eventStr.split(spaceMatcher);
         syncBindings(target, entity, events, handlers);
-      }, this);
+      });
     }
   
     _.extend(Mn.State, {

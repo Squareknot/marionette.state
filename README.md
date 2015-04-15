@@ -162,6 +162,10 @@ var UserPreferenceState = Marionette.State.extend({
     active: false
   },
   
+  componentEvents: {
+    'toggle:active': 'onToggleActive'
+  },
+
   userEvents: {
     'change:userPreference', 'onChangeUserPreference'
   },
@@ -253,63 +257,63 @@ mainRegion.show(userPreferencesView);
 
 ### Class Properties
 
-#### `modelClass`
+**`modelClass`**
 
 Optional state model class to instantiate, otherwise a pure Backbone.Model will be used.
 
-#### `defaultState`
+**`defaultState`**
 
 Optional default state attributes hash.  These will be applied to the underlying model when it is initialized.
 
-#### `componentEvents`
+**`componentEvents`**
 
 Optional hash of component event bindings.  Enabled by passing `{ component: <Marionette object> }` as an option or by using a StateBehavior, in which case `component` is the view.
 
 ### Initialization Options
 
-#### `component`
+**`component`**
 
 Optional Marionette object to which to bind lifecycle and events.  When `component` is destroyed the State instance is also destroyed.  The `componentEvents` events hash is also bound to `component`.  When using State with a StateBehavior, `component` is automatically set to the view.
 
-#### `initialState`
+**`initialState`**
 
 Optional initial state attributes.  These attributes are combined with `defaultState` for initializing the underlying state model, and become the basis for future `reset()` calls.
 
 ### Methods
 
-#### `setState(attrs)`
+**`setState(attrs)`**
 
 Resets the underlying state model and `initialState` (destructively) to conform to the passed attrs.  Future calls to `reset()` will return to this point.
 
-#### `getModel()`
+**`getModel()`**
 
 Returns the underlying state model.
 
-#### `getInitialState()`
+**`getInitialState()`**
 
 Returns a clone of the initial state hash leveraged by `reset()`.
 
-#### `reset()`
+**`reset()`**
 
 Resets the state model to its value as of initialization or the last `setState()`.
 
-#### `set(attrs, options)`
+**`set(attrs, options)`**
 
 Proxy to state model `set(attrs, options)`.
 
-#### `get(attr)`
+**`get(attr)`**
 
 Proxy to state model `get(attr)`.
 
-#### `setComponent(eventedObj)`
+**`setComponent(eventedObj)`**
 
 Bind lifetime to an evented (Backbone.Events) object, e.g. a Backbone.Model or a Marionette object.  If the object has a `destroy` method, State will be destroyed automatically along with the object.  `componentEvents` are also bound to this object.
 
-#### `getComponent()`
+**`getComponent()`**
 
 Returns current component.
 
-#### `syncEntityEvents(entity, entityEvents)`
+**`syncEntityEvents(entity, entityEvents)`**
 
 Binds `entityEvents` to `entity` exactly like `Marionette.bindEntityEvents`, but also calls handlers immediately for the purpose of initializing state.  See [Marionette.State Functions API](#marionette-state-functions-api): `syncEntityEvents`.
 
@@ -319,30 +323,41 @@ A StateBehavior adds Marionette.State seamlessly to a view, turning a view into 
 
 ### Behavior Options
 
-#### `stateClass`
+**`stateClass`**
 
 Type of Marionette.State to instantiate
 
-#### `initialState`
+**`initialState`**
 
 Optional initial state attrs
 
-#### `stateOptions`
+**`stateOptions`**
 
 Options to pass to Marionette.State
 
-#### `mapOptions`
+**`mapOptions`**
 
-Map view options to Marionette.State options, as follows:
+`mapOptions` permits declaratively mapping view options to state options in a few different ways:
 
-- `{ stateOption: 'viewOption' } ` - `view.options.viewOption` will be passed as `stateOption`.
-- `{ stateOption: 'viewOption.property' }` - `view.options.viewOption.property` will be passed as `stateOption`.
-- `{ stateOption: true }` - `view.options.stateOptions` will be passed as `stateOption`.
-- `{ stateOption: function(viewOptions) }` - At view initialization time, return value of function given `view.options` will be passed as `stateOption`.
+`stateOption: 'viewOption'`
+
+- `view.options.viewOption` will be passed as `stateOption`.
+
+`stateOption: 'viewOption.property'`
+
+- `view.options.viewOption.property` will be passed as `stateOption`.
+
+`stateOption: true`
+
+- `view.options.stateOptions` will be passed as `stateOption`.
+
+`stateOption: function(viewOptions)`
+
+- At view initialization time, return value of function given `view.options` will be passed as `stateOption`.
 
 Using `mapOptions`, the view can be treated as a sophisticated "component", including receiving component options, but instead of managing component options internally it may proxy them to the State instance.
 
-#### `serialize`
+**`serialize`**
 
 Whether to serialize state into template (default false).  State will be serialized underneath the `state` property.  For example:
 
@@ -372,13 +387,13 @@ var OkayView = Marionette.ItemView.extend({
 })
 ```
 
-#### `syncEvent`
+**`syncEvent`**
 
 View event on which to call state handlers, keeping the DOM in sync with state. Defaults to 'render'.
 
 ### View Side Effects
 
-#### `view.state`
+**`view.state`**
 
 On initialization, StateBehavior will set the `state` property on the View to the underlying state model of the State instance (`State.getModel()`).  This is useful for manually determining specific state values on the fly or passing to child views to keep them in sync with the overall component.
 
@@ -386,44 +401,14 @@ _Please note:_ A View calling `this.state.set()` is an anti-pattern, as it viola
 
 ## Marionette.State Functions API
 
-#### `syncEntityEvents(target, entity, entityEvents, event)`
+**`syncEntityEvents(target, entity, entityEvents, event)`**
 
 Binds `entityEvents` handlers located on `target` to `entity` using `Marionette.bindEntityEvents`, but then calls handlers either immediately or on `event` to ensure `target` is synchronized with `entity` state.  This synchronization step is timed as follows:
 
 - If `event` is provided, then call handlers whenever `target` fires `event`.
 - If `event` is not provided, then call handlers immediately.
 
-**Example keeping a View synchronized with a state entity using syncEntityEvents.**
-
-```js
-var View = Marionette.ItemView.extend({
-
-  entityEvents: {
-    'change:foo': 'onChangeFoo',
-    'change:bar': 'onChangeBar'
-  }
-
-  initialize: function (options) {
-    this.entity = new Backbone.Model({
-      foo: 1,
-      bar: 2  
-    });
-    Marionette.State.syncEntityEvents(this, this.entity, this.entityEvents, 'render');
-  },
-
-  onChangeFoo: function (entity, foo) {
-    if (foo) this.$el.addClass('foo');
-    else this.$el.removeClass('foo');
-  },
-
-  onChangeBar: function (entity, bar) {
-    if (bar) this.$el.addClass('bar');
-    else this.$el.removeClass('bar');
-  }
-);
-```
-
-**Example keeping a View synchronized with a state entity _without_ using syncEntityEvents.**
+**Example _without_ syncEntityEvents.**
 
 ```js
 var View = Marionette.ItemView.extend({
@@ -458,6 +443,36 @@ var View = Marionette.ItemView.extend({
 });
 ```
 
+**Example _with_ syncEntityEvents.**
+
+```js
+var View = Marionette.ItemView.extend({
+
+  entityEvents: {
+    'change:foo': 'onChangeFoo',
+    'change:bar': 'onChangeBar'
+  }
+
+  initialize: function (options) {
+    this.entity = new Backbone.Model({
+      foo: 1,
+      bar: 2  
+    });
+    Marionette.State.syncEntityEvents(this, this.entity, this.entityEvents, 'render');
+  },
+
+  onChangeFoo: function (entity, foo) {
+    if (foo) this.$el.addClass('foo');
+    else this.$el.removeClass('foo');
+  },
+
+  onChangeBar: function (entity, bar) {
+    if (bar) this.$el.addClass('bar');
+    else this.$el.removeClass('bar');
+  }
+);
+```
+
 Event handlers are called with the same API as [Backbone.Model/Collection events](http://backbonejs.org/#Events-catalog).  Only the following events trigger state synchronization.
 
 ```
@@ -475,7 +490,7 @@ Notably, Collection `add` and `remove` events do not trigger state synchronizati
 
 For event mappings with multiple events matching the rules above, all handlers are called for each event.  This is closest to Backbone.Events behavior, but be careful because you may accidently trigger more handler calls than you intended.  In the following example, both handlers are each called with values of 'foo' and 'bar':
 
-```
+```js
 // These entityEvents
 entityEvents: {
   'change:foo change:bar': 'onChangeFoo onChangeBar'
@@ -490,5 +505,5 @@ target.doSomethingElse(model, model.get('bar'))
 
 If one must react to two specific value changes with one or more of the same handlers, consider using a global 'change' event then checking the entity's [`changedAttributes()`](http://backbonejs.org/#Model-changedAttributes) object for the existence of the desired properties.  This is also the best approach for a familiar related scenario:
 
-`modelEvents: { 'change:foo change:bar': 'render' }` is best handled by
-`modelEvents: { 'change': 'onChange' }`, where `onChange` checks `model.changedAttributes()` for `foo` and `bar`.
+`modelEvents: {'change:foo change:bar': 'render'}` is best handled by
+`modelEvents: {'change': 'onChange'}`, where `onChange` checks `model.changedAttributes()` for `foo` and `bar`.

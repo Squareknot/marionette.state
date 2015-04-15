@@ -1,3 +1,7 @@
+v0.2.3 [Commit Log](https://github.com/Squareknot/marionette.state/compare/v0.2.2...v0.2.3)
+
+- Fixed 'true' not working with mapOption
+
 v0.2.2 [Commit Log](https://github.com/Squareknot/marionette.state/compare/v0.2.1...v0.2.2)
 
 - Fixed require dependency issue
