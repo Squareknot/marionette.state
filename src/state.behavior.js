@@ -34,12 +34,12 @@ Mn.State.Behavior = Mn.Behavior.extend({
 
     // Give view access to the state model, but not the state object directly in order to
     // encourage decoupling; i.e., using view event triggers -> Marionette.State componentEvents.
-    if (this.view.state) throw new Error('View already contains a state attribute.');
-    this.view.state = state.getModel();
+    if (this.view.stateModel) throw new Error('View already contains a stateModel attribute.');
+    this.view.stateModel = state.getModel();
 
     // Bind state events as well as call change handlers onRender to keep DOM in sync with state.
     if (this.view.stateEvents) {
-      Mn.State.syncEntityEvents(this.view, this.view.state, this.view.stateEvents, syncEvent);
+      Mn.State.syncEntityEvents(this.view, this.view.stateModel, this.view.stateEvents, syncEvent);
     }
 
     // Optionally set up serialization of state attributes to view template as 'state.attribute'
