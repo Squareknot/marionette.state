@@ -31,18 +31,18 @@ Mn.State = Mn.Object.extend({
     // State model class is either passed in, on the class, or a standard Backbone model
     this.modelClass = options.modelClass || this.modelClass || Bb.Model;
 
-    this.setState(options.initialState);
+    this.resetState(options.initialState);
 
     Mn.State.__super__.constructor.apply(this, arguments);
   },
 
   // Initialize model with attrs or reset it, destructively, to conform to attrs.
-  setState: function (attrs, options) {
+  resetState: function (attrs, options) {
     this._initialState = _.extend({}, this.defaultState, attrs);
 
     // If model is set, reset it. Otherwise, create it.
     if (this._model) {
-      this.reset(options);
+      this.reset(null, options);
     } else {
       this._model = new this.modelClass(this._initialState);
     }
@@ -58,10 +58,11 @@ Mn.State = Mn.Object.extend({
     return _.clone(this._initialState);
   },
 
-  // Return state to its initial value, destructively (uses {unset:true}).
-  reset: function (options) {
-    options = _.extend({ unset: true }, options);
-    this._model.set(this._initialState, options);
+  // Return state to its initial value.
+  // If `attrs` is provided, they will override initial values for a "partial" reset.
+  reset: function (attrs, options) {
+    var resetAttrs = _.extend({}, this._initialState, attrs);
+    this._model.set(resetAttrs, options);
   },
 
   // Proxy to model set().
