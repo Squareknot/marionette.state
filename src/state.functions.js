@@ -48,6 +48,33 @@
     });
   }
 
+  function Syncing(target, entity, bindings) {
+    this.target = target;
+    this.entity = entity;
+    this.bindings = bindings;
+  }
+
+  Syncing.prototype.when = function (eventObj, event) {
+    if (!event) {
+      event = eventObj;
+      eventObj = this.target;
+    }
+    this.event = event;
+    this.eventObj = eventObj;
+    this.syncBindingsHash = _.partial(syncBindingsHash, this.target, this.entity, this.bindings);
+    this.when = true;
+
+    this.target.__syncingEntityEvents = this.target.__syncingEntityEvents || [];
+    this.target.__syncingEntityEvents.push(this);
+    this.target.listenTo(this.eventObj, this.event, this.syncBindingsHash);
+    return this;
+  };
+
+  Syncing.prototype.now = function () {
+    syncBindingsHash(this.target, this.entity, this.bindings);
+    return this;
+  };
+
   _.extend(Mn.State, {
 
     // Binds 'bindings' handlers located on 'target' to 'entity' using
@@ -75,32 +102,25 @@
     //   doSomethingElse(model, model.get('bar'))
     syncEntityEvents: function (target, entity, bindings, event) {
       Mn.bindEntityEvents(target, entity, bindings);
+      var syncing = new Syncing(target, entity, bindings);
       if (event) {
-        var handler = _.partial(syncBindingsHash, target, entity, bindings);
-        var syncing = {
-          entity: entity,
-          bindings: bindings,
-          event: event,
-          handler: handler
-        };
-        target.__syncingEntityEvents = target.__syncingEntityEvents || [];
-        target.__syncingEntityEvents.push(syncing);
-        target.on(event, handler);
+        syncing.when(event);
       } else {
-        syncBindingsHash(target, entity, bindings);
+        syncing.now();
       }
     },
 
     // Ceases syncing entity events.
     stopSyncingEntityEvents: function (target, entity, bindings) {
       Mn.unbindEntityEvents(target, entity, bindings);
-      if (target.render && target.__syncingEntityEvents) {
-        _.each(target.__syncingEntityEvents, function (syncing) {
-          if (entity === syncing.entity && bindings === syncing.bindings) {
-            target.off(syncing.event, syncing.handler);
-          }
-        });
+      if (!target.__syncingEntityEvents) {
+        return;
       }
+      _.each(target.__syncingEntityEvents, function (syncing) {
+        if (syncing.when) {
+          target.stopListening(syncing.eventObj, syncing.event, syncing.handler);
+        }
+      });
     }
   });
 })(Bb, Mn, _);
