@@ -121,11 +121,9 @@
       return this._component;
     },
   
-    // Binds entityEvents to entity exactly like Marionette.bindEntityEvents, but also
-    // calls certain handlers immediately for the purpose of initializing state.
-    // See StateFunctions#syncEntityEvents.
+    // Proxy to StateFunctions#syncEntityEvents.
     syncEntityEvents: function (entity, entityEvents) {
-      Mn.State.syncEntityEvents(this, entity, entityEvents);
+      return Mn.State.syncEntityEvents(this, entity, entityEvents);
     }
   });
   
@@ -170,7 +168,8 @@
   
       // Bind state events as well as call change handlers onRender to keep DOM in sync with state.
       if (this.view.stateEvents) {
-        Mn.State.syncEntityEvents(this.view, this.view.stateModel, this.view.stateEvents, syncEvent);
+        Mn.State.syncEntityEvents(this.view, this.view.stateModel, this.view.stateEvents)
+          .when(syncEvent);
       }
   
       // Optionally set up serialization of state attributes to view template as 'state.attribute'
@@ -322,22 +321,24 @@
       //   doSomethingElse(model, model.get('foo'))
       //   doSomething(model, model.get('bar'))
       //   doSomethingElse(model, model.get('bar'))
-      syncEntityEvents: function (target, entity, bindings, event) {
+      syncEntityEvents: function (target, entity, bindings) {
         Mn.bindEntityEvents(target, entity, bindings);
-        if (event) {
-          var handler = _.partial(syncBindingsHash, target, entity, bindings);
-          var syncing = {
-            entity: entity,
-            bindings: bindings,
-            event: event,
-            handler: handler
-          };
-          target.__syncingEntityEvents = target.__syncingEntityEvents || [];
-          target.__syncingEntityEvents.push(syncing);
-          target.on(event, handler);
-        } else {
-          syncBindingsHash(target, entity, bindings);
-        }
+        return {
+          target: target,
+          entity: entity,
+          bindings: bindings,
+          when: function (event) {
+            var handler = _.partial(syncBindingsHash, target, entity, bindings);
+            target.__syncingEntityEvents = target.__syncingEntityEvents || [];
+            target.__syncingEntityEvents.push(this);
+            this.target.on(event, handler);
+            return this;
+          },
+          now: function () {
+            syncBindingsHash(this.target, this.entity, this.bindings);
+            return this;
+          }
+        };
       },
   
       // Ceases syncing entity events.

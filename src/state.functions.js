@@ -73,22 +73,24 @@
     //   doSomethingElse(model, model.get('foo'))
     //   doSomething(model, model.get('bar'))
     //   doSomethingElse(model, model.get('bar'))
-    syncEntityEvents: function (target, entity, bindings, event) {
+    syncEntityEvents: function (target, entity, bindings) {
       Mn.bindEntityEvents(target, entity, bindings);
-      if (event) {
-        var handler = _.partial(syncBindingsHash, target, entity, bindings);
-        var syncing = {
-          entity: entity,
-          bindings: bindings,
-          event: event,
-          handler: handler
-        };
-        target.__syncingEntityEvents = target.__syncingEntityEvents || [];
-        target.__syncingEntityEvents.push(syncing);
-        target.on(event, handler);
-      } else {
-        syncBindingsHash(target, entity, bindings);
-      }
+      return {
+        target: target,
+        entity: entity,
+        bindings: bindings,
+        when: function (event) {
+          var handler = _.partial(syncBindingsHash, target, entity, bindings);
+          target.__syncingEntityEvents = target.__syncingEntityEvents || [];
+          target.__syncingEntityEvents.push(this);
+          this.target.on(event, handler);
+          return this;
+        },
+        now: function () {
+          syncBindingsHash(this.target, this.entity, this.bindings);
+          return this;
+        }
+      };
     },
 
     // Ceases syncing entity events.

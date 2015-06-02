@@ -96,10 +96,8 @@ Mn.State = Mn.Object.extend({
     return this._component;
   },
 
-  // Binds entityEvents to entity exactly like Marionette.bindEntityEvents, but also
-  // calls certain handlers immediately for the purpose of initializing state.
-  // See StateFunctions#syncEntityEvents.
+  // Proxy to StateFunctions#syncEntityEvents.
   syncEntityEvents: function (entity, entityEvents) {
-    Mn.State.syncEntityEvents(this, entity, entityEvents);
+    return Mn.State.syncEntityEvents(this, entity, entityEvents);
   }
 });
