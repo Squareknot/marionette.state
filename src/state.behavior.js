@@ -39,8 +39,7 @@ Mn.State.Behavior = Mn.Behavior.extend({
 
     // Bind state events as well as call change handlers onRender to keep DOM in sync with state.
     if (this.view.stateEvents) {
-      Mn.State.syncEntityEvents(this.view, this.view.stateModel, this.view.stateEvents)
-        .when(syncEvent);
+      Mn.State.syncEntityEvents(this.view, this.view.stateModel, this.view.stateEvents, syncEvent);
     }
 
     // Optionally set up serialization of state attributes to view template as 'state.attribute'

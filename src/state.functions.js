@@ -48,7 +48,7 @@
     });
   }
 
-  function Syncing (target, entity, bindings) {
+  function Syncing(target, entity, bindings) {
     this.target = target;
     this.entity = entity;
     this.bindings = bindings;
@@ -61,12 +61,12 @@
     }
     this.event = event;
     this.eventObj = eventObj;
-    this.handler = _.partial(syncBindingsHash, this.target, this.entity, this.bindings);
+    this.syncBindingsHash = _.partial(syncBindingsHash, this.target, this.entity, this.bindings);
     this.when = true;
 
     this.target.__syncingEntityEvents = this.target.__syncingEntityEvents || [];
     this.target.__syncingEntityEvents.push(this);
-    this.target.listenTo(this.eventObj, this.event, this.handler);
+    this.target.listenTo(this.eventObj, this.event, this.syncBindingsHash);
     return this;
   };
 
@@ -100,9 +100,14 @@
     //   doSomethingElse(model, model.get('foo'))
     //   doSomething(model, model.get('bar'))
     //   doSomethingElse(model, model.get('bar'))
-    syncEntityEvents: function (target, entity, bindings) {
+    syncEntityEvents: function (target, entity, bindings, event) {
       Mn.bindEntityEvents(target, entity, bindings);
-      return new Syncing(target, entity, bindings);
+      var syncing = new Syncing(target, entity, bindings);
+      if (event) {
+        syncing.when(event);
+      } else {
+        syncing.now();
+      }
     },
 
     // Ceases syncing entity events.
