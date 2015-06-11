@@ -1,5 +1,10 @@
+import _ from 'underscore';
+import Backbone from 'backbone';
+import Mn from 'backbone.marionette';
+import {syncEntityEvents} from './state.functions';
+
 // Manage state for a component.
-Mn.State = Mn.Object.extend({
+const State = Mn.Object.extend({
 
   // State model class to instantiate
   modelClass: undefined,
@@ -23,21 +28,22 @@ Mn.State = Mn.Object.extend({
   //   component:    {Marionette object} An arbitrary object for lifetime and event binding.
   //     May be any Marionette object, so long as it has a destroy() method.
   //   initialState: {attrs} Optional initial state (defaultState will still be applied)
-  constructor: function (options) {
+  constructor(options) {
     options = options || {};
     // Bind to component
-    if (options.component) this.setComponent(options.component);
+    if (options.component) { this.setComponent(options.component); }
 
     // State model class is either passed in, on the class, or a standard Backbone model
-    this.modelClass = options.modelClass || this.modelClass || Bb.Model;
+    this.modelClass = options.modelClass || this.modelClass || Backbone.Model;
 
     this.resetState(options.initialState);
 
-    Mn.State.__super__.constructor.apply(this, arguments);
+    State.__super__.constructor.apply(this, arguments);
   },
 
   // Initialize model with attrs or reset it, destructively, to conform to attrs.
-  resetState: function (attrs, options) {
+  resetState(attrs, options) {
+    /* eslint-disable new-cap */
     this._initialState = _.extend({}, this.defaultState, attrs);
 
     // If model is set, reset it. Otherwise, create it.
@@ -49,37 +55,37 @@ Mn.State = Mn.Object.extend({
   },
 
   // Return the state model.
-  getModel: function () {
+  getModel() {
     return this._model;
   },
 
   // Returns the initiate state, which is reverted to by reset()
-  getInitialState: function () {
+  getInitialState() {
     return _.clone(this._initialState);
   },
 
   // Return state to its initial value.
   // If `attrs` is provided, they will override initial values for a "partial" reset.
-  reset: function (attrs, options) {
+  reset(attrs, options) {
     var resetAttrs = _.extend({}, this._initialState, attrs);
     this._model.set(resetAttrs, options);
   },
 
   // Proxy to model set().
-  set: function () {
-    if (!this._model) throw new Mn.Error('Initialize state first.');
+  set() {
+    if (!this._model) { throw new Mn.Error('Initialize state first.'); }
     this._model.set.apply(this._model, arguments);
   },
 
   // Proxy to model get().
-  get: function () {
-    if (!this._model) throw new Mn.Error('Initialize state first.');
+  get() {
+    if (!this._model) { throw new Mn.Error('Initialize state first.'); }
     return this._model.get.apply(this._model, arguments);
   },
 
   // Bind lifetime and component events to an object initialized with Backbone.Events, such as
   // a Backbone model or a Marionette object.
-  setComponent: function (eventedObj) {
+  setComponent(eventedObj) {
     this.stopListening(this._component, 'destroy');
     if (this.componentEvents) {
       this.unbindEntityEvents(this._component, this.componentEvents);
@@ -92,12 +98,14 @@ Mn.State = Mn.Object.extend({
   },
 
   // Marionette object bound to
-  getComponent: function () {
+  getComponent() {
     return this._component;
   },
 
   // Proxy to StateFunctions#syncEntityEvents.
-  syncEntityEvents: function (entity, entityEvents) {
-    return Mn.State.syncEntityEvents(this, entity, entityEvents);
+  syncEntityEvents(entity, entityEvents) {
+    return syncEntityEvents(this, entity, entityEvents);
   }
 });
+
+export default State;
