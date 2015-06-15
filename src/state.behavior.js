@@ -61,18 +61,18 @@ const StateBehavior = Mn.Behavior.extend({
   _mapOption(viewOptionKey, stateOptionKey) {
     var stateOptionValue;
 
-    // Boolean true is an identity transformation; e.g., { stateOption: 'stateOption' }
     if (viewOptionKey === true) {
+      // Identity transformation; e.g., { stateOption: 'stateOption' }
       stateOptionValue = this.view.options[stateOptionKey];
     }
-    // Unwind nested keys; e.g., 'value.property.subproperty'
     else if (_.isString(viewOptionKey)) {
+      // Unwind nested keys; e.g., 'value.property.subproperty'
       stateOptionValue = _.reduce(viewOptionKey.split('.'), (memo, key) => {
         return memo[key];
       }, this.view.options);
     }
-    // Functions are evaluated in the view context and passed the view options
     else if (_.isFunction(viewOptionKey)) {
+      // Evaluate function in the view context and pass the view options
       stateOptionValue = viewOptionKey.call(this.view, this.view.options);
     }
     else {
@@ -92,7 +92,7 @@ const StateBehavior = Mn.Behavior.extend({
       var data = serializeData.call(this); // 'this' is the view
       var stateAttrs = _.clone(state.attributes);
 
-      // If existing attributes do not contain 'state', drop stateAttribute right in.
+      // If existing attributes do NOT contain 'state', drop stateAttribute right in.
       if (_.isUndefined(data.state)) {
         data.state = stateAttrs;
       }
@@ -113,7 +113,8 @@ const StateBehavior = Mn.Behavior.extend({
     for (var attr in attrs) {
       if (_.isUndefined(target[attr])) {
         target[attr] = attrs[attr];
-      } else {
+      }
+      else {
         throw new Mn.Error('Attribute \'' + attr + '\' already defined.');
       }
     }

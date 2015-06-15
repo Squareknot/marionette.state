@@ -1,6 +1,17 @@
 {
   "preset": "google",
   "maximumLineLength": 100,
+  
+  // ES6
   "esnext": true,
-  "disallowKeywordsOnNewLine": []
+
+  // Force else's onto their own line
+  "disallowKeywordsOnNewLine": [],
+  "requireKeywordsOnNewLine": ["else"],
+
+  // Crockford anonymous function spacing
+  "disallowSpacesInAnonymousFunctionExpression": null,
+  "requireSpacesInAnonymousFunctionExpression": {
+    "beforeOpeningRoundBrace": true
+  }
 }

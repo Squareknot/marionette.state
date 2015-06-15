@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import Backbone from 'backbone';
 import Mn from 'backbone.marionette';
+import State from './state';
 
 var changeMatcher = /^change:(.+)/;
 var spaceMatcher = /\s+/;
@@ -29,7 +30,9 @@ function syncBinding(target, entity, event, handlers) {
       (entity instanceof Backbone.Collection && event === 'reset')) {
     callHandlers(target, entity, handlers);
   }
-  else if (entity instanceof Backbone.Model && (changeMatch = event.match(changeMatcher))) {
+  else if (
+      (entity instanceof Backbone.Model || entity instanceof State) &&
+      (changeMatch = event.match(changeMatcher))) {
     var attr = changeMatch[1];
     callHandlers(target, entity, handlers, attr);
   }
@@ -44,7 +47,7 @@ function syncBindings(target, entity, events, handlers) {
 }
 
 // Sync 'target' with the bindings hash { 'event1 event 2': 'handler1 handler2' }.
-function syncBindingsHash(target, entity, bindings) {
+function sync(target, entity, bindings) {
   _.each(bindings, (handlers, eventStr) => {
     var events = eventStr.split(spaceMatcher);
     syncBindings(target, entity, events, handlers);
@@ -57,24 +60,25 @@ function Syncing(target, entity, bindings) {
   this.bindings = bindings;
 }
 
-Syncing.prototype.when = function(eventObj, event) {
+Syncing.prototype.when = function (eventObj, event) {
   if (!event) {
     event = eventObj;
     eventObj = this.target;
   }
-  this.event = event;
   this.eventObj = eventObj;
-  this.syncBindingsHash = _.partial(syncBindingsHash, this.target, this.entity, this.bindings);
-  this.when = true;
+  this.event = event;
+  this.handler = () => {
+    sync(this.target, this.entity, this.bindings);
+  };
 
   this.target.__syncingEntityEvents = this.target.__syncingEntityEvents || [];
   this.target.__syncingEntityEvents.push(this);
-  this.target.listenTo(this.eventObj, this.event, this.syncBindingsHash);
+  this.target.listenTo(this.eventObj, this.event, this.handler);
   return this;
 };
 
-Syncing.prototype.now = function() {
-  syncBindingsHash(this.target, this.entity, this.bindings);
+Syncing.prototype.now = function () {
+  sync(this.target, this.entity, this.bindings);
   return this;
 };
 
@@ -106,7 +110,8 @@ export function syncEntityEvents(target, entity, bindings, event) {
   var syncing = new Syncing(target, entity, bindings);
   if (event) {
     syncing.when(event);
-  } else {
+  }
+  else {
     syncing.now();
   }
 }
@@ -114,12 +119,9 @@ export function syncEntityEvents(target, entity, bindings, event) {
 // Ceases syncing entity events.
 export function stopSyncingEntityEvents(target, entity, bindings) {
   Mn.unbindEntityEvents(target, entity, bindings);
-  if (!target.__syncingEntityEvents) {
-    return;
-  }
-  _.each(target.__syncingEntityEvents, (syncing) => {
-    if (syncing.when) {
+  if (target.__syncingEntityEvents) {
+    _.each(target.__syncingEntityEvents, (syncing) => {
       target.stopListening(syncing.eventObj, syncing.event, syncing.handler);
-    }
-  });
+    });
+  }
 }
