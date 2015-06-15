@@ -27,10 +27,10 @@
     }
   ],
   "scripts": {
-    "test": "npm dedupe underscore backbone && gulp test",
-    "test-browser": "npm dedupe underscore backbone && gulp test-browser",
-    "build": "npm dedupe underscore backbone && gulp build",
-    "coverage": "npm dedupe underscore backbone && gulp coverage"
+    "test": "node_modules/.bin/gulp test",
+    "test-browser": "node_modules/.bin/gulp test-browser",
+    "build": "node_modules/.bin/gulp build",
+    "coverage": "node_modules/.bin/gulp coverage"
   },
   "author": {
     "name": "ianmstew",
@@ -46,9 +46,9 @@
   },
   "github": "https://github.com/Squareknot/marionette.state.git",
   "dependencies": {
-    "backbone": "1.0.0 - 1.2.1",
-    "underscore": "1.4.4 - 1.8.3",
-    "backbone.marionette": "^2.1.0"
+    "backbone": "1.0.0 - 1.1.2",
+    "underscore": "1.4.4 - 1.6.0",
+    "backbone.marionette": "2.1.0 - 2.4.1"
   },
   "devDependencies": {
     "babel": "^5.0.0",
