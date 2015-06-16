@@ -29,9 +29,10 @@
     "test",
     ".gitignore",
     ".jscsrc",
-    ".jshintrc",
+    ".eslintrc",
+    ".travis.yml",
     ".npmignore",
-    "gruntfile.js"
+    "gulpfile.js"
   ],
   "dependencies": {
     "backbone": "1.0.0 - 1.1.2",

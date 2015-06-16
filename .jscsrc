@@ -5,13 +5,13 @@
   // ES6
   "esnext": true,
 
-  // Force else's onto their own line
-  "disallowKeywordsOnNewLine": [],
-  "requireKeywordsOnNewLine": ["else"],
-
   // Crockford anonymous function spacing
   "disallowSpacesInAnonymousFunctionExpression": null,
   "requireSpacesInAnonymousFunctionExpression": {
     "beforeOpeningRoundBrace": true
-  }
+  },
+
+  // More readable inline objects
+  "disallowSpacesInsideObjectBrackets": null,
+  "requireSpacesInsideObjectBrackets": "allButNested"
 }

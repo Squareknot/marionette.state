@@ -1,2 +1,0 @@
-describe('State Functions', function() {
-});

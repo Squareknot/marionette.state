@@ -11,11 +11,14 @@
     "mocha": true
   },
   "globals": {
-    "spy": true,
-    "expect": true,
     "Mn": true,
     "Bb": true,
     "_": true,
     "$": true,
+    "sinon": true,
+    "chai": true,
+    "spy": true,
+    "stub": true,
+    "expect": true
   }
 }

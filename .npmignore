@@ -2,7 +2,8 @@ src
 test
 .gitignore
 .jscsrc
-.jshintrc
+.eslintrc
+.travis.yml
 .npmignore
+gulpfile.js
 bower.json
-gruntfile.js
