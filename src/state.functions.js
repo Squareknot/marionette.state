@@ -12,8 +12,7 @@ function callHandlers(target, entity, handlers, attr) {
 
   if (_.isFunction(handlers)) {
     handlers.call(target, entity, value);
-  }
-  else {
+  } else {
     var handlerKeys = handlers.split(spaceMatcher);
     _.each(handlerKeys, (handlerKey) => {
       target[handlerKey](entity, value);
@@ -29,8 +28,7 @@ function syncBinding(target, entity, event, handlers) {
   if (event === 'change' || event === 'all' ||
       (entity instanceof Backbone.Collection && event === 'reset')) {
     callHandlers(target, entity, handlers);
-  }
-  else if (
+  } else if (
       (entity instanceof Backbone.Model || entity instanceof State) &&
       (changeMatch = event.match(changeMatcher))) {
     var attr = changeMatch[1];
@@ -70,9 +68,6 @@ Syncing.prototype.when = function (eventObj, event) {
   this.handler = () => {
     sync(this.target, this.entity, this.bindings);
   };
-
-  this.target.__syncingEntityEvents = this.target.__syncingEntityEvents || [];
-  this.target.__syncingEntityEvents.push(this);
   this.target.listenTo(this.eventObj, this.event, this.handler);
   return this;
 };
@@ -82,46 +77,50 @@ Syncing.prototype.now = function () {
   return this;
 };
 
-// Binds 'bindings' handlers located on 'target' to 'entity' using
-// Marionette.bindEntityEvents, but then initializes state by calling handlers:
-//   Backbone.Model
-//     'all'          (model)
-//     'change'       (model)
-//     'change:value' (model, value)
-//   Backbone.Collection
-//     'all'          (collection)
-//     'reset'        (collection)
-//     'change'       (collection)
-//
-// Handlers are called immediately unless 'event' is supplied, in which case handlers will be
-// called every time 'target' triggers 'event'. Views will automatically sync on 'render'
-// unless this argument is supplied.
-//
-// For event mappings with multiple matching events, all handlers are called for each event.
-// For example, the following mapping:
-//   { 'change:foo change:bar': 'doSomething doSomethingElse' }
-// will call:
-//   doSomething(model, model.get('foo'))
-//   doSomethingElse(model, model.get('foo'))
-//   doSomething(model, model.get('bar'))
-//   doSomethingElse(model, model.get('bar'))
-export function syncEntityEvents(target, entity, bindings, event) {
-  Mn.bindEntityEvents(target, entity, bindings);
-  var syncing = new Syncing(target, entity, bindings);
-  if (event) {
-    syncing.when(event);
-  }
-  else {
-    syncing.now();
-  }
-}
+Syncing.stop = function () {
+  this.target.stopListening(this.eventObj, this.event, this.handler);
+};
 
-// Ceases syncing entity events.
-export function stopSyncingEntityEvents(target, entity, bindings) {
-  Mn.unbindEntityEvents(target, entity, bindings);
-  if (target.__syncingEntityEvents) {
-    _.each(target.__syncingEntityEvents, (syncing) => {
-      target.stopListening(syncing.eventObj, syncing.event, syncing.handler);
-    });
+var stateFunctions = {
+
+  // Binds 'bindings' handlers located on 'target' to 'entity' using
+  // Marionette.bindEntityEvents, but then initializes state by calling handlers:
+  //   Backbone.Model
+  //     'all'          (model)
+  //     'change'       (model)
+  //     'change:value' (model, value)
+  //   Backbone.Collection
+  //     'all'          (collection)
+  //     'reset'        (collection)
+  //     'change'       (collection)
+  //
+  // Handlers are called immediately unless 'event' is supplied, in which case handlers will be
+  // called every time 'target' triggers 'event'. Views will automatically sync on 'render'
+  // unless this argument is supplied.
+  //
+  // For event mappings with multiple matching events, all handlers are called for each event.
+  // For example, the following mapping:
+  //   { 'change:foo change:bar': 'doSomething doSomethingElse' }
+  // will call:
+  //   doSomething(model, model.get('foo'))
+  //   doSomethingElse(model, model.get('foo'))
+  //   doSomething(model, model.get('bar'))
+  //   doSomethingElse(model, model.get('bar'))
+  syncEntityEvents(target, entity, bindings, event) {
+    Mn.bindEntityEvents(target, entity, bindings);
+    var syncing = new Syncing(target, entity, bindings);
+    if (event) {
+      syncing.when(event);
+    } else {
+      syncing.now();
+    }
+  },
+
+  // Ceases syncing entity events.
+  // TODO
+  stopSyncingEntityEvents(target, entity, bindings, event) {
+    target = entity = bindings = event; // Suppress unused
   }
-}
+};
+
+export default stateFunctions;
