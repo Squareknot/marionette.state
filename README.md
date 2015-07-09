@@ -39,7 +39,7 @@ var region = new Mn.Region({ el: '#region' });
 var model = new Backbone.Model({ url: '/rest-endpoint' });
 
 // View will re-render when the model changes
-var View = Mn.ItemView({
+var View = Mn.ItemView.extend({
   modelEvents: {
     'change': 'render'
   }
