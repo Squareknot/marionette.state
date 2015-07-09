@@ -39,7 +39,7 @@ var region = new Mn.Region({ el: '#region' });
 var model = new Backbone.Model({ url: '/rest-endpoint' });
 
 // View will re-render when the model changes
-var View = Mn.ItemView({
+var View = Mn.ItemView.extend({
   modelEvents: {
     'change': 'render'
   }
@@ -117,7 +117,7 @@ var ToggleState = Mn.State.extend({
 });
 
 // A toggle button that is alternately "active" or not.
-var ToggleView = Mn.ItemView({
+var ToggleView = Mn.ItemView.extend({
   template: 'Toggle Me',
   tagName: 'button',
 
@@ -191,7 +191,7 @@ var AppState = Mn.State.extend({
 });
 
 // Alternately a login or logout button depending on app authentication state.
-var ToggleAuthView = Mn.ItemView({
+var ToggleAuthView = Mn.ItemView.extend({
   template: 'This Button Label Will Be Replaced',
   tagName: 'button',
 
@@ -306,7 +306,7 @@ var ToggleAuthState = Mn.State.extend({
 });
 
 // Alternately a login or logout button depending on app authentication state.
-var ToggleAuthView = Mn.ItemView({
+var ToggleAuthView = Mn.ItemView.extend({
   template: 'This Button Label Will Be Replaced',
   tagName: 'button',
 
@@ -451,7 +451,7 @@ var ToggleAuthState = Mn.State.extend({
 });
 
 // Alternately a login or logout button depending on app authentication state.
-var ToggleAuthView = Mn.ItemView({
+var ToggleAuthView = Mn.ItemView.extend({
   template: 'This Button Label Will Be Replaced',
   tagName: 'button',
 
