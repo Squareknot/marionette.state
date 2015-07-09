@@ -15,10 +15,11 @@ git clone git://github.com/Squareknot/marionette.state.git
 
 - [Reasoning](#reasoning)
 - [Examples](#examples)
-  - [Interactive View](#interactive-view)
+  - [Stateful View](#stateful-view)
   - [View Directly Dependent upon Application State](#view-directly-dependent-upon-application-state)
   - [View Indirectly Dependent upon Application State](#view-indirectly-dependent-upon-application-state)
-  - [Sub-Applications](#sub-application)
+  - [View Indirectly Dependent upon Application State with Business Service](#view-indirectly-dependent-upon-application-state-with-business-service)
+  - [Sub-Applications](#sub-applications)
   - [Sub-Views](#sub-views)
 - [State API](#state-api)
   - [Class Properties](#class-properties)
@@ -79,9 +80,9 @@ Separating state into its own entity and then maintaining that entity with one-w
 
 In each of these examples, views are demonstrated without core content models for simplicity.  This emphasizes that state management is occurring independently from renderable core content.  Adding core content models should be familiar to any Marionette developer.
 
-### Interactive View
+### Stateful View
 
-From time to time, a view needs to support interactions that only affect itself.  On refresh, these states are reset.  The temptation is to use properties directly on the view instance, but this breaks the Backbone convention that 100% of DOM changes should be rooted in a model change.  In this example, a transient view spawns it own, also transient, State.
+From time to time, a view needs to support interactions that only affect itself.  On refresh, these states are reset.  In this example, a transient view spawns it own, also transient, State.
 
 State flow for a simple interactive view:
 
@@ -144,25 +145,9 @@ var ToggleView = Mn.ItemView({
   }
 });
 
-// App controller shows the ToggleView.
-var AppController = Mn.Object.extend({
-  initialize(options={}) {
-    this.region = options.region;
-  },
-
-  // Show the ToggleView
-  show() {
-    // Transient view with its own transient state
-    var view = new ToggleView();
-    this.region.show(view);
-  }
-});
-
 var appRegion = new Region({ el: '#app-region' });
-var appController = new AppController({
-  region: appRegion
-});
-appController.show();
+var toggleView = new ToggleView();
+appRegion.show(toggleView);
 ```
 
 ### View Directly Dependent upon Application State
