@@ -25,6 +25,7 @@ git clone git://github.com/Squareknot/marionette.state.git
   - [Class Properties](#class-properties)
   - [Initialization Options](#initialization-options)
   - [Methods](#methods)
+  - [Events](#events)
 - [State Functions API](#state-functions-api)
 
 ## Reasoning
@@ -49,7 +50,7 @@ var View = Mn.ItemView.extend({
 var view = new View({ model: model });
 
 // Fetch the latest data
-model.fetch().done(function () {
+model.fetch().done(() => {
   // Show the view with initial data
   region.show(view);
 });
@@ -94,10 +95,10 @@ Solved with Mn.State:
 
 <img src="https://docs.google.com/drawings/d/1MM7iAEzqIMYNvmasTfoO2uwR3TD9oaxuVwUKDslI8mo/pub?w=916&amp;h=269" width=640>
 
-1. A view renders initial state.
-2. The view triggers events that are handled by view state.
-3. View state reacts to view events, changing its attributes.
-4. The view reacts to state changes, updating the DOM.
+1. View renders initial View State.
+2. View triggers events that are handled by View State.
+3. View State reacts to view events, updating its attributes.
+4. View reacts to state changes, updating the DOM.
 
 ```js
 // Listens to view events and updates view state attributes.
@@ -110,7 +111,7 @@ var ToggleState = Mn.State.extend({
     'toggle': 'onToggle'
   },
 
-  onToggle: function () {
+  onToggle() {
     var active = this.get('active');
     this.set('active', !active);
   }
@@ -145,8 +146,9 @@ var ToggleView = Mn.ItemView.extend({
   }
 });
 
-var appRegion = new Region({ el: '#app-region' });
 var toggleView = new ToggleView();
+
+var appRegion = new Region({ el: '#app-region' });
 appRegion.show(toggleView);
 ```
 
@@ -157,17 +159,17 @@ Relatively often, it is convenient for a view to depend on long-lived applicatio
 State flow for a simple view that depends directly upon long-lived application state:
 
 1. A view is rendered with current app state.
-2. The view triggers an app-level event, changing the app state.
+2. The view triggers an app-level event, resulting in an app state change.
 3. The view reacts to app state changes, updating the DOM.
 
 Solved with Mn.State:
 
 <img src="https://docs.google.com/drawings/d/1ehZaWzewoxyN4qqxAvTBNm9gJDt4YOasRKjxEQSx6L0/pub?w=916&amp;h=269" width=640>
 
-1. View renders initial app state.
-2. View trigger events that are handled by the app state.
-3. App state reacts to events, changing app state.
-4. View reacts to app state changes, updating the DOM.
+1. View renders initial App State.
+2. View trigger events that are handled by App State.
+3. App State reacts to events, updating its attributes.
+4. View reacts to App State changes, updating the DOM.
 
 ```js
 // Listens to application level events and updates app State attributes.
@@ -243,21 +245,21 @@ Sometimes a view has its own, transient, internal state that is related to long-
 
 State flow for a simple view that depends indirectly on long-lived application state:
 
-1. View is rendered with initial state reliant upon current app state.
-2. View triggers an app-level event, changing the app state.
-3. App state change effects a view state change.
+1. View is rendered with initial state dependent upon current app state.
+2. View triggers an app-level event, resulting in an app state change.
+3. App state change results in a view state change.
 4. View reacts to view state changes, updating the DOM.
 
 Solved with Mn.State:
 
 <img src="https://docs.google.com/drawings/d/1Cqrf81pYEwITbZlNYKKTvEGPUBUBC1vzdt6S_g0gvzM/pub?w=884&amp;h=562" width=640>
 
-1. View state synchronizes with app state.
-2. View renders initial view state.
-2. View triggers events that are handled by app state.
-3. App state reacts to events, changing app state.
-5. View state reacts to app state changes, synchronizing.
-6. View reacts to view state changes, updating the DOM.
+1. View State synchronizes with App State.
+2. View renders initial View State.
+3. View triggers events that are handled by App State.
+4. App State reacts to events, updating its attributes.
+5. View State reacts to App State changes, updating its attributes.
+6. View reacts to View State changes, updating the DOM.
 
 ```js
 // Listens to application level events and updates state attributes.
@@ -353,21 +355,22 @@ An application with a business layer for handling persistence to a server is jus
 
 State flow for a simple view that depends indirectly on long-lived application state connected to a business service:
 
-1. View is rendered with initial state reliant upon current app state.
+1. View is rendered with initial state dependent upon current app state.
 2. View makes an app-level request, affecting business objects and resulting in an app state change.
-3. App state change causes a view state change.
+3. App state change results in a view state change.
 4. View reacts to view state changes, updating the DOM.
 
 Solved with Mn.State:
 
 <img src="https://docs.google.com/drawings/d/1mhmOwNhoP4a9dV8jejpQAac03gGOehT7ZQnQwNDHi5o/pub?w=915&amp;h=618" width=640>
 
-1. View state synchronizes with app state.
-2. View renders initial view state.
-2. View triggers events that are handled by app state.
-3. App state reacts to events, changing app state.
-5. View state reacts to app state changes, synchronizing.
-6. View reacts to view state changes, updating the DOM.
+1. View State synchronizes with App State.
+2. View renders initial View State.
+3. View makes requests that are handled by App Controller.
+4. App Controller modifies business objects and triggers app events.
+5. App State reacts to app events, updating its attributes.
+6. View State reacts to App State changes, updating its attributes.
+7. View reacts to View State changes, updating the DOM.
 
 ```js
 // Listens to application level events and updates state attributes.
@@ -399,9 +402,7 @@ var AppController = Mn.Object.extend({
 
   initialize(options={}) {
     this.channel = Radio.channel('app');
-    this.state = new AppState({
-      component: this.channel
-    });
+    this.state = new AppState({ component: this.channel });
     Radio.reply('app', this.radioRequests(), this);
   },
 
@@ -409,18 +410,22 @@ var AppController = Mn.Object.extend({
     // Assume Backbone.$.ajax is shimmed to return ES6 Promises.
     return Backbone.$.ajax('/api/session', { method: 'POST' })
       .then(() => {
-        this.trigger('login');
+        this.channel.trigger('login');
       })
       .catch(() => {
-        this.trigger('logout');
+        this.channel.trigger('logout');
       });
   },
 
   logout() {
     return Backbone.$.ajax('/api/session', { method: 'DELETE' })
       .then(() => {
-        this.trigger('logout');
+        this.channel.trigger('logout');
       });
+  },
+
+  getState() {
+    return this.state;
   }
 });
 
@@ -508,17 +513,17 @@ Within a deeply nested, complex view that requires a deeper layer of state, perh
 
 ### Class Properties
 
-##### `modelClass`
-
-Optional Backbone.Model class to instantiate, otherwise a pure Backbone.Model will be used.
-
 ##### `defaultState`
 
 Optional default state attributes hash.  These will be applied to the underlying model when it is initialized.
 
 ##### `componentEvents`
 
-Optional hash of component event bindings.  Enabled by passing `{ component: <Marionette object> }` as an option or by using a StateBehavior, in which case `component` is the view.
+Optional hash of component event bindings.  Enabled by passing `{component: <Evented object>}` as an initialization option.
+
+##### `modelClass`
+
+Optional Backbone.Model class to instantiate, otherwise a pure Backbone.Model will be used.
 
 ### Initialization Options
 
@@ -528,11 +533,11 @@ Optional initial state attributes.  These attributes are combined with `defaultS
 
 ##### `component`
 
-Optional Marionette object to which to bind lifecycle and events.  The `componentEvents` events hash is bound to `component`.  When `component` is destroyed the State instance is also destroyed, unless `preventDestroy: true` is also passed.
+Optional evented object to which to bind lifecycle and events.  The `componentEvents` events hash is bound to `component`.  When `component` fires `'destroy'` the State instance is also destroyed, unless `{preventDestroy: true}` is also passed.
 
 ##### `preventDestroy`
 
-Only applies when `component` is provided.  By default, the State instance is destroyed when `component` is destroyed, but`preventDestroy: true` will prevent this behavior.
+Only applies when `component` is provided.  By default, the State instance will destruct when `component` fires `'destroy'`, but `{preventDestroy: true}` will prevent this behavior.
 
 ### Methods
 
@@ -582,7 +587,7 @@ var StatefulView = Mn.ItemView.extend({
   },
 
   onStateChange(state) {
-    if (!state.hasAnyChanged('foo', 'bar')) {
+    if (state.hasAnyChanged('foo', 'bar')) {
       this.$el.addClass('is-foo-bar');
     } else {
       this.$el.removeClass('is-foo-bar');
@@ -593,49 +598,38 @@ var StatefulView = Mn.ItemView.extend({
 
 ##### `bindComponent(component, options)`
 
-Bind `componentEvents` to `component` and cascade destroy to self when component fires 'destroy'.  This prevents a state from outliving its component and causing a memory leak.  To prevent self-destroy behavior, pass `preventDestroy: true` as an option.
+Bind `componentEvents` to `component` and self-destruct when `component` fires `'destroy'`.  This prevents a state from outliving its component and causing a memory leak.  To prevent self-destruct behavior, pass `{preventDestroy: true}` as an option.
 
 ##### `unbindComponent(component)`
 
-Unbind `componentEvents` from `component` and stop listening to component 'destroy' event.
+Unbind `componentEvents` from `component` and stop listening to component `'destroy'` event.
 
 ##### `syncEntityEvents(entity, bindings, event)`
 
-Attaches event bindings `bindings` to `entity` using `Mn.bindEntityEvents`.  Ensures initial state is synchronized as well by calling `bindings` handlers whenever State fires `event` or else calls them immediately if `event` is not defined.  Returns a `Syncing` instance, which contains a single public method `#stop` that may be used to cancel the syncing.
+Registers event bindings `bindings` with `entity` using [`Mn.bindEntityEvents`](https://github.com/marionettejs/backbone.marionette/blob/master/docs/marionette.functions.md#marionettebindentityevents) using this State as context.  Ensures initial state is synchronized with this State by calling `bindings` handlers whenever this State fires `event`, or else calls `bindings` handlers immediately if `event` is undefined.
+
+### Events
+
+A State instance proxies events from its underlying model, substituting the model argument for the State instance.
+
+##### `'change' (state, options)`
+
+Fired when any attributes are updated, once per `#set` call.
+
+##### `'change:{attribute}' (state, value, options)`
+
+Fired when a specific attribute is updated.
 
 ## State Functions API
 
 ##### `syncEntityEvents(target, entity, bindings, event)`
 
-Attaches event bindings `bindings` to `entity` using `Mn.bindEntityEvents` in the context of `target`.  Ensures initial state is synchronized as well by calling `bindings` handlers whenever `target` fires `event` or else calls them immediately if `event` is not defined.
+Registers event bindings `bindings` with `entity` using [`Mn.bindEntityEvents`](https://github.com/marionettejs/backbone.marionette/blob/master/docs/marionette.functions.md#marionettebindentityevents) using `target` as context.  Ensures initial state is synchronized with `target` by calling `bindings` handlers whenever `target` fires `event`, or else calls `bindings` handlers immediately if `event` is undefined.
 
-Event handlers are called with the same arguments [as defined in Backbone](http://backbonejs.org/#Events-catalog).  Only the following event bindings will be synchronized.
-
-```
-Backbone.Model
-  'all'          (model)
-  'change'       (model)
-  'change:value' (model, value)
-
-Backbone.Collection
-  'all'          (collection)
-  'reset'        (collection)
-  'change'       (collection)
-```
-
-Notably, Collection `add` and `remove` event handlers will not be synchronized, because they do not have a backing value (the added or removed element is not known until the event occurs).  However, one may combine them with `reset` if one is interested in a syncable state that also tracks with changes in the collection.
-
-Just like Backbone, all handlers will be called for all supported events.  In the following binding, both `handler1` and `handler2` will be called twice on sync--once with the value of `foo` and once with the value of `bar`:
-
-```js
-{ 'change:foo change:bar': 'handler1 handler2' }
-```
-
-###### Example without syncEntityEvents
+##### Example without syncEntityEvents
 
 ```js
 var View = Mn.ItemView.extend({
-
   entityEvents: {
     'change:foo': 'onChangeFoo'
   }
@@ -661,18 +655,17 @@ var View = Mn.ItemView.extend({
 });
 ```
 
-###### Example with syncEntityEvents
+##### Example with syncEntityEvents
 
 ```js
 var View = Mn.ItemView.extend({
-
   entityEvents: {
     'change:foo': 'onChangeFoo'
   }
 
   initialize() {
     this.entity = new Backbone.Model({
-      foo: 1 
+      foo: true
     });
     Mn.State.syncEntityEvents(this, this.entity, this.entityEvents, 'render');
   },
@@ -685,4 +678,66 @@ var View = Mn.ItemView.extend({
     }
   }
 );
+```
+
+##### Syncable Events
+
+Event handlers are called with standard [Backbone event arguments](http://backbonejs.org/#Events-catalog).  Only the following event bindings will be synchronized.
+
+```
+Backbone.Model
+  'all'                (model)
+  'change'             (model)
+  'change:{attribute}' (model, value)
+
+Backbone.Collection
+  'all'                (collection)
+  'reset'              (collection)
+  'change'             (collection)
+```
+
+Notably, Collection `'add'` and `'remove'` event handlers will not be synchronized, because `'add'` and `'remove'` do not have a backing value (the added or removed element is not known until the event occurs).  However, `'add remove reset'` is syncable and also tracks with changes in the collection.
+
+##### Handling Multiple change:{attribute} Events
+
+Just like Backbone, all handlers will be called for all supported events on sync.  In the following binding, `handler` will be called twice on sync--once with the value of `foo` and once with the value of `bar`:
+
+```js
+{ 'change:foo change:bar': 'handler' }
+```
+
+Because handlers called multiple times for a single sync is probably not desired behavior, the best practise to synchronize multiple attributes with a single handler is the same as standard Backbone: Listen for `change` and check `model.changed` for particular attributes.
+
+```js
+modelEvents: { 'change': 'handler' },
+
+initialize() {
+  var model = new Backbone.Model();
+  Mn.State.syncEntityEvents(this, model, this.modelEvents);
+},
+
+handler(model) {
+  if (!_.isUndefined(model.changed.foo) || !_.isUndefined(model.changed.bar)) {
+    return;
+  }
+  // foo or bar have changed
+}
+```
+
+When synchronizing with a State instance, this can become:
+
+```js
+stateEvents: { 'change': 'handler' },
+
+initialize() {
+  var state = new Mn.State();
+  Mn.State.syncEntityEvents(this, state, this.stateEvents);
+},
+
+handler(state) {
+  if (!state.hasAnyChanged('foo', 'bar')) {
+    return;
+  }
+  // foo or bar have changed
+}
 ```
