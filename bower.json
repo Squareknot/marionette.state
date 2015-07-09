@@ -1,6 +1,6 @@
 {
   "name": "marionette-state",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "homepage": "https://github.com/Squareknot/marionette.state",
   "authors": [
     "ianmstew <ianmstew@gmail.com>"
@@ -29,9 +29,10 @@
     "test",
     ".gitignore",
     ".jscsrc",
-    ".jshintrc",
+    ".eslintrc",
+    ".travis.yml",
     ".npmignore",
-    "gruntfile.js"
+    "gulpfile.js"
   ],
   "dependencies": {
     "backbone": "1.0.0 - 1.1.2",

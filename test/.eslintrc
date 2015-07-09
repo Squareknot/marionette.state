@@ -1,0 +1,24 @@
+{
+  "parser": "babel-eslint",
+  "rules": {
+    "strict": 0,
+    "quotes": [2, "single"],
+    "no-unused-expressions": false
+  },
+  "env": {
+    "browser": true,
+    "node": true,
+    "mocha": true
+  },
+  "globals": {
+    "Mn": true,
+    "Bb": true,
+    "_": true,
+    "$": true,
+    "sinon": true,
+    "chai": true,
+    "spy": true,
+    "stub": true,
+    "expect": true
+  }
+}

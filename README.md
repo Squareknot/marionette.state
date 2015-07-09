@@ -1,53 +1,55 @@
 marionette.state
 ================
 
-One-way data flow architecture for stateful components within a Backbone.Marionette app.
+One-way state architecture for a Marionette.js app.
 
 ## Installation
 
 ```
-git clone git://github.com/Squareknot/marionette.state.git
-bower install marionette-state
 npm install marionette.state
+bower install marionette-state
+git clone git://github.com/Squareknot/marionette.state.git
 ```
 
 ## Documentation
 
-- [Introduction](#introduction)
-- [Architectural Pattern](#architectural-pattern)
+- [Reasoning](#reasoning)
 - [Examples](#examples)
-  - [Radio Button](#radio-button)
-  - [Radio Button Group Synced with External Model](#radio-button-group-synced-with-application-model)
-- [Marionette.State API](#marionette-state-api)
+  - [Interactive View](#interactive-view)
+  - [View Directly Dependent upon Application State](#view-directly-dependent-upon-application-state)
+  - [View Indirectly Dependent upon Application State](#view-indirectly-dependent-upon-application-state)
+  - [Sub-Applications](#sub-application)
+  - [Sub-Views](#sub-views)
+- [State API](#state-api)
   - [Class Properties](#class-properties)
   - [Initialization Options](#initialization-options)
   - [Methods](#methods)
-- [Marionette.State.Behavior API](#marionette-state-behavior-api)
-  - [Behavior Options](#behavior-options)
-  - [View Side Effects](#view-side-effects)
-- [Marionette.State Functions API](#marionette-state-functions-api)
+- [State Functions API](#state-functions-api)
 
-## Introduction
+## Reasoning
 
 A Marionette View is a DOM representation of a Backbone model. When the model updates, so does the view.  Here is a quick example:
 
 ```js
 // Region to attach views
-var region = new Marionette.Region({ el: '#main' });
+var region = new Mn.Region({ el: '#region' });
 
 // Model synced with '/rest-endpoint'
 var model = new Backbone.Model({ url: '/rest-endpoint' });
 
 // View will re-render when the model changes
-var View = Marionette.ItemView({
-  modelEvents: { 'change': 'render' }
+var View = Mn.ItemView({
+  modelEvents: {
+    'change': 'render'
+  }
 });
 
 // Create the view
 var view = new View({ model: model });
 
-// Fetch the latest data and, once ready, show the view
+// Fetch the latest data
 model.fetch().done(function () {
+  // Show the view with initial data
   region.show(view);
 });
 
@@ -55,455 +57,647 @@ model.fetch().done(function () {
 model.fetch();
 ```
 
-This is great for simple views that are only interested in representing a single model.  What should one do when a view depends on other states, such as user interaction or application state?  Is it good idea to store view-specific state attributes directly on its model?  Is using plain Javascript properties on the View object okay?
+This is great for views that are only interested in representing simple content.  Consider more complex, yet quite common, scenarios:
 
-`Marionette.State` allows a view to _seamlessly depend on any source of state_ while keeping view state logic self-contained and eliminating the temptation to pollute a server-syncronized data model with view-specific state.  Best of all, `Marionette.State` does this by providing declarative and expressive tools rather than over-engineering for every use case, much like the Marionette library itself.
+* **A view renders core content but also reacts to user interaction.**  E.g., a view renders a list of people, but the end user is able to select individal items with a "highlight" effect before saving changes.
+* **A view renders core content but also depends on external state.**  E.g., a view renders a person's profile, but if the profile belongs to the authenticated user then enable "edit" features.
+* **Multiple views share a core content model but each have unique view states.**  E.g., multiple views render a user profile object, but in completely different ways that require unique view states: an avatar beside a comment, a short bio available when hovering over an avatar, a full user profile display.
 
-## Architectural Pattern
+Common solutions:
 
-Before launching into the details, it will be helpful to examine a sturdy architectural pattern that has been recently popularlized by Facebook's Flux architecture: one-way data binding.  Given the sheer decision-making power handed to a Backbone developer, a pattern such as this can go a long way toward simplifying and standardizing code organization and data flow.
+* Store view states in the core content model, but override `toJSON` to avoid sending those attributes to the server.
+* Store view states in the core content model shared between views, but avoid naming collisions or other confusion (which view is "enabled"?).
+* Store view states directly on the view object and follow each "set" with "if different" statements so you know when a state has changed.
 
-Consider the following common scenario on the component (view) level:
+Each of these solutions works up until a point, but side effects mount as complexity rises: Logic-heavy views, views unreliably reflecting state changes, models doing too much leading to excessive re-renders, accidentally transmitting state data to server on save.
 
-1. A component is rendered with some data
-2. A user interacts with the component
-3. The component reacts by updating its visual state, perhaps requesting more data
+Separating state into its own entity and then maintaining that entity with one-way data binding solves each of these problems without the side effects of other solutions.  It is a pattern simple enough to implement using pure Marionette code, but this library seeks to simplify the implementation further by providing a state toolset.
 
-It is easy to start writing all the logic necessary to handle state updates in the view itself and mash view state attributes into the data model, but this quickly becomes inelegant at best and a 300+ line mess at worst.  What if the state logic could be separated and the data model left to handle strictly persisted data?  The architecture might look like this:
-
-<img class="diagram" src="https://docs.google.com/drawings/d/13_kBAF5IIl2MbJkPDo4rj_U0VG-QKRv8mWkkwYIJFPI/pub?w=960&amp;h=720" height=480>
-
-1. A view only renders _dumb updates_ of data and state.
-2. The view _triggers events_ that are handled by a service (`Marionette.State`).
-3. The service reacts to both _view events_ and _application state changes_.
-4. The service triggers application events.
-5. The application reacts to application events and may trigger data _and/or_ application state updates.
-6. The view reacts to data and state changes, again performing only _dumb updates_, and the cycle repeats.
-
-This uni-directional flow of state allows each entity to do a single job--the job it does best.  The view renders data and state.  The `Marionette.State` service consolidates view events and application state changes into view state. The application performs business level actions and ultimately updates data models and application state.  `Marionette.State` is simply a tool that streamlines view state management and dependencies on application state.
+`Mn.State` allows a view to _seamlessly depend on any source of state_ while keeping state logic self-contained and eliminates the temptation to pollute core content models with view-specific state.  Best of all, `Mn.State` does this by providing declarative and expressive tools rather than over-engineering for every use case, much like the Marionette library itself.
 
 ## Examples
 
-### Toggle Button
+In each of these examples, views are demonstrated without core content models for simplicity.  This emphasizes that state management is occurring independently from renderable core content.  Adding core content models should be familiar to any Marionette developer.
 
-In this example, a toggle button is "active" or "inactive" and its state is toggled with a click.  This state is not persisted, but it is reflected in the DOM.  The initial state is assumed to be "inactive".  Marionette.State manages the 'active' state by converting view events into state changes.  ToggleView's only responsibility is to react to state changes through the 'stateEvents' hash.
+### Interactive View
+
+From time to time, a view needs to support interactions that only affect itself.  On refresh, these states are reset.  The temptation is to use properties directly on the view instance, but this breaks the Backbone convention that 100% of DOM changes should be rooted in a model change.  In this example, a transient view spawns it own, also transient, State.
+
+State flow for a simple interactive view:
+
+1. A view is rendered with some initial state.
+2. The user interacts with the view, triggering a state change.
+3. The view reacts by updating the DOM according to the new state.
+
+Solved with Mn.State:
+
+<img src="https://docs.google.com/drawings/d/1MM7iAEzqIMYNvmasTfoO2uwR3TD9oaxuVwUKDslI8mo/pub?w=916&amp;h=269" width=640>
+
+1. A view renders initial state.
+2. The view triggers events that are handled by view state.
+3. View state reacts to view events, changing its attributes.
+4. The view reacts to state changes, updating the DOM.
 
 ```js
-var ToggleState = Marionette.State.extend({
-  
-  defaults: {
+// Listens to view events and updates view state attributes.
+var ToggleState = Mn.State.extend({
+  defaultState: {
     active: false
   },
 
   componentEvents: {
-    'toggle:active': 'onToggleActive'
+    'toggle': 'onToggle'
   },
 
-  onToggleActive: function () {
-    var active = !this.get('active');
-    this.set('active', active);
+  onToggle: function () {
+    var active = this.get('active');
+    this.set('active', !active);
   }
 });
 
-var ToggleView = Marionette.ItemView.extend({
-  
-  template: '<%= label %>',
+// A toggle button that is alternately "active" or not.
+var ToggleView = Mn.ItemView({
+  template: 'Toggle Me',
   tagName: 'button',
 
-  behaviors: {
-    behaviorClass: Marionette.State.Behavior,
-    stateClass: ToggleState
-  },
-
-  modelEvents: {
-    'change': 'render'
-  },
-
-  // Handlers are automatically onRender in addition to on changes.
-  // This onRender behavior avoids boilerplate and keeps DOM synchronized with state.
-  stateEvents: {
-    'change:active', 'onChangeActive'
-  },
-
   triggers: {
-    'click': 'toggle:active'
+    'click .js-toggle': 'toggle'
   },
 
-  onChangeActive: function(state, active) {
-    if (active) this.$el.addClass('active');
-    else this.$el.removeClass('active');
+  stateEvents: {
+    'change:active': 'onChangeActive'
+  },
+
+  // Create and sync with my own State.
+  initialize() {
+    this.state = new ToggleState({ component: this });
+    Mn.State.syncEntityEvents(this, this.state, this.stateEvents, 'render');
+  },
+
+  // Active class will be added/removed on render and on 'active' change.
+  onChangeActive(state, active) {
+    if (active) {
+      this.$el.addClass('is-active');
+    } else {
+      this.$el.removeClass('is-active');
+    }
   }
 });
 
-// Create a toggle button
-var buttonModel = new Backbone.Model({
-  id: 1,
-  label: 'foo'
-});
-var toggleView = new ToggleView({
-  model: buttonModel
+// App controller shows the ToggleView.
+var AppController = Mn.Object.extend({
+  initialize(options={}) {
+    this.region = options.region;
+  },
+
+  // Show the ToggleView
+  show() {
+    // Transient view with its own transient state
+    var view = new ToggleView();
+    this.region.show(view);
+  }
 });
 
-// Show the toggle button
-var mainRegion = new Region({
-  el: "#main"
+var appRegion = new Region({ el: '#app-region' });
+var appController = new AppController({
+  region: appRegion
 });
-mainRegion.show(toggleView);
+appController.show();
 ```
 
-### Radio Button Group Synced with External Model
+### View Directly Dependent upon Application State
 
-In this example, a ToggleView is extended with Radio button-group behavior using Marionette.State to handle the logic.  Note that the view is identical except for switching out the logic (State) driving it.  This is possible because view logic is completely isolated from the view, leaving the view responsible for simple updates.
+Relatively often, it is convenient for a view to depend on long-lived application state.  This example uses authentication status to demonstrate binding a view directly to the state of the application.
+
+State flow for a simple view that depends directly upon long-lived application state:
+
+1. A view is rendered with current app state.
+2. The view triggers an app-level event, changing the app state.
+3. The view reacts to app state changes, updating the DOM.
+
+Solved with Mn.State:
+
+<img src="https://docs.google.com/drawings/d/1ehZaWzewoxyN4qqxAvTBNm9gJDt4YOasRKjxEQSx6L0/pub?w=916&amp;h=269" width=640>
+
+1. View renders initial app state.
+2. View trigger events that are handled by the app state.
+3. App state reacts to events, changing app state.
+4. View reacts to app state changes, updating the DOM.
 
 ```js
-var UserPreferenceState = Marionette.State.extend({
-
-  defaults: {
-    active: false
+// Listens to application level events and updates app State attributes.
+var AppState = Mn.State.extend({
+  defaultState: {
+    authenticated: false
   },
-  
+
   componentEvents: {
-    'toggle:active': 'onToggleActive'
+    'login': 'onLogin',
+    'logout': 'onLogout'
   },
 
-  userEvents: {
-    'change:userPreference', 'onChangeUserPreference'
+  onLogin() {
+    this.set('authenticated', true);
   },
 
-  initialize: function (options) {
-    options = options || {};
-    this.radioModel = options.radioModel;
-    this.user = options.user;
-
-    // Marionette.State.syncEntityEvents is similar to Marionette.bindEntityEvents, except here
-    // it synchronizes state by calling change handlers immediately in addition to on changes.
-    this.syncEntityEvents(user, userEvents);
-  },
-
-  // Use Backbone.Radio channel for application event: setting the user preference.
-  onToggleActive: function () {
-    if (!this.get('active')) {
-      Backbone.Radio.command('user', 'set:userPreference', this.radioModel.id);
-    }
-  },
-
-  // Whenever the user's preference radio changes, update 'active' state by the following rules:
-  // - If current userPreference matches this one, set 'active' state to true.
-  // - If current userPreference does not match this one, set 'active' state to false.
-  onChangeUserPreference: function (user, userPreference) {
-    var active = userPreference === this.radioModel.id;
-    this.set('active', active);
+  onLogout() {
+    this.set('authenticated', false);
   }
 });
 
-// Extends ToggleView only in its state management
-var UserPreferenceView = ToggleView.extend({
-  
-  behaviors: {
-    behaviorClass: Marionette.State.Behavior,
-    stateClass: UserPreferenceState,
-    mapOptions: {
-      radioModel: 'model', // Pass the view's 'model' option to RadioState as 'radioModel'
-      user: true           // Pass the view's 'user' option to RadioState as 'user'
+// Alternately a login or logout button depending on app authentication state.
+var ToggleAuthView = Mn.ItemView({
+  template: 'This Button Label Will Be Replaced',
+  tagName: 'button',
+
+  triggers: {
+    'click': 'loginLogout'
+  },
+
+  appStateEvents: {
+    'change:authenticated': 'onChangeAuthenticated'
+  },
+
+  // Bind to app State.
+  initialize(options={}) {
+    this.appState = options.appState;
+    this.appChannel = Radio.channel('app');
+    Mn.State.syncEntityEvents(this, this.appState, this.appStateEvents, 'render');
+  },
+
+  // Button text will be updated on every render and `action` change.
+  onChangeAuthenticated(appState, authenticated) {
+    if (authenticated) {
+      this.$el.text('Logout');
+    } else {
+      this.$el.text('Login');
     }
   },
-});
 
-var UserPreferencesView = Marionette.CollectionView.extend({
-
-  childView: UserPreferenceView,
-
-  // Accepts a 'user' option that is passed to child views
-  initialize: function (options) {
-    options = options || {};
-
-    this.childViewOptions = {
-      user: options.user
+  // Login/logout toggle will always fire the appropriate action.
+  loginLogout() {
+    if (this.appState.get('authenticated')) {
+      Radio.trigger('app', 'logout');
+    } else {
+      Radio.request('app', 'login');
     }
   }
 });
 
-// Create the application user model
-var user = new Backbone.Model({
-  userPreference: 1
-});
+var appChannel = Radio.channel('app');
+var appState = new AppState({ component: appChannel });
+var toggleAuthView = new ToggleAuthView({ appState: appState });
 
-// Set up global Backbone.Radio handler for changing userPreference
-Backbone.Radio.comply('user', 'set:userPreference', function (userPreference) {
-  user.set('userPreference', userPreference);
-});
-
-// Initialize possible user preferences
-var userPreferences = new Backbone.Collection([
-  { id: 1, label: 'foo' },
-  { id: 2, label: 'bar' },
-  { id: 3, label: 'baz' }
-]);
-
-// Create user preferences selection view
-var userPreferencesView = new UserPreferencesView({
-  collection: userPreferences,
-  user: user
-});
-
-// Show user preferences selection view
-var mainRegion = new Region({
-  el: "#main"
-});
-mainRegion.show(userPreferencesView);
+var appRegion = new Region({ el: '#app-region' });
+appRegion.show(toggleAuthView);
 ```
 
-## Marionette.State API
+### View Indirectly Dependent upon Application State
+
+Sometimes a view has its own, transient, internal state that is related to long-lived application state.  While this particular example doesn't require that layer of indirection to achieve its goal (a Login/Logout button), the goal here is to demonstrate all that is necessary to achieve two tiers of State.
+
+State flow for a simple view that depends indirectly on long-lived application state:
+
+1. View is rendered with initial state reliant upon current app state.
+2. View triggers an app-level event, changing the app state.
+3. App state change effects a view state change.
+4. View reacts to view state changes, updating the DOM.
+
+Solved with Mn.State:
+
+<img src="https://docs.google.com/drawings/d/1Cqrf81pYEwITbZlNYKKTvEGPUBUBC1vzdt6S_g0gvzM/pub?w=884&amp;h=562" width=640>
+
+1. View state synchronizes with app state.
+2. View renders initial view state.
+2. View triggers events that are handled by app state.
+3. App state reacts to events, changing app state.
+5. View state reacts to app state changes, synchronizing.
+6. View reacts to view state changes, updating the DOM.
+
+```js
+// Listens to application level events and updates state attributes.
+var AppState = Mn.State.extend({
+  defaultState: {
+    authenticated: false
+  },
+
+  componentEvents: {
+    'login': 'onLogin',
+    'logout': 'onLogout'
+  },
+
+  onLogin() {
+    this.set('authenticated', true);
+  },
+
+  onLogout() {
+    this.set('authenticated', false);
+  }
+});
+
+// Syncs with application State.
+var ToggleAuthState = Mn.State.extend({
+  defaultState: {
+    action: 'login'
+  },
+
+  appStateEvents: {
+    'change:authenticated': 'onChangeAuthenticated'
+  },
+
+  initialize(options={}) {
+    this.appState = options.appState;
+    this.syncEntityEvents(this.appState, this.appStateEvents);
+  },
+
+  // Called on initialize and on change app 'authenticated'.
+  onChangeAuthenticated(appState, authenticated) {
+    if (authenticated) {
+      this.set('action', 'logout');
+    } else {
+      this.set('action', 'login');
+    }
+  }
+});
+
+// Alternately a login or logout button depending on app authentication state.
+var ToggleAuthView = Mn.ItemView({
+  template: 'This Button Label Will Be Replaced',
+  tagName: 'button',
+
+  triggers: {
+    'click': 'loginLogout'
+  },
+
+  stateEvents: {
+    'change:action': 'onChangeAction'
+  },
+
+  // Create and bind to my own State, which is injected with app State.
+  initialize(options={}) {
+    this.appState = Radio.channel('app');
+    this.state = new ToggleAuthState({
+      appState: options.appState,
+      component: this
+    });
+    Mn.State.syncEntityEvents(this, this.state, this.stateEvents, 'render');
+  },
+
+  // Button text will be updated on every render and 'action' change.
+  onChangeAction(state, action) {
+    this.$el.text(action);
+  },
+
+  // Login/logout toggle will always fire the appropriate action.
+  loginLogout() {
+    this.appState.trigger(this.state.get('action'));
+  }
+});
+
+var appChannel = Radio.channel('app');
+var appState = new AppState({ component: appChannel });
+var toggleAuthView = new ToggleAuthView({ appState: appState });
+
+var appRegion = new Region({ el: '#app-region' });
+appRegion.show(toggleAuthView);
+```
+
+### View Indirectly Dependent upon Application State with Business Service
+
+An application with a business layer for handling persistence to a server is just one more step--the addition of an app controller that responds to Radio requests.
+
+State flow for a simple view that depends indirectly on long-lived application state connected to a business service:
+
+1. View is rendered with initial state reliant upon current app state.
+2. View makes an app-level request, affecting business objects and resulting in an app state change.
+3. App state change causes a view state change.
+4. View reacts to view state changes, updating the DOM.
+
+Solved with Mn.State:
+
+<img src="https://docs.google.com/drawings/d/1mhmOwNhoP4a9dV8jejpQAac03gGOehT7ZQnQwNDHi5o/pub?w=915&amp;h=618" width=640>
+
+1. View state synchronizes with app state.
+2. View renders initial view state.
+2. View triggers events that are handled by app state.
+3. App state reacts to events, changing app state.
+5. View state reacts to app state changes, synchronizing.
+6. View reacts to view state changes, updating the DOM.
+
+```js
+// Listens to application level events and updates state attributes.
+var AppState = Mn.State.extend({
+  defaultState: {
+    authenticated: false
+  },
+
+  componentEvents: {
+    'login': 'onLogin',
+    'logout': 'onLogout'
+  },
+
+  onLogin() {
+    this.set('authenticated', true);
+  },
+
+  onLogout() {
+    this.set('authenticated', false);
+  }
+});
+
+// App controller fields application level requests and triggers application events.
+var AppController = Mn.Object.extend({
+  radioRequests() { return {
+    'login': this.login,
+    'logout': this.logout
+  }},
+
+  initialize(options={}) {
+    this.channel = Radio.channel('app');
+    this.state = new AppState({
+      component: this.channel
+    });
+    Radio.reply('app', this.radioRequests(), this);
+  },
+
+  login() {
+    // Assume Backbone.$.ajax is shimmed to return ES6 Promises.
+    return Backbone.$.ajax('/api/session', { method: 'POST' })
+      .then(() => {
+        this.trigger('login');
+      })
+      .catch(() => {
+        this.trigger('logout');
+      });
+  },
+
+  logout() {
+    return Backbone.$.ajax('/api/session', { method: 'DELETE' })
+      .then(() => {
+        this.trigger('logout');
+      });
+  }
+});
+
+// Syncs with application State.
+var ToggleAuthState = Mn.State.extend({
+  defaultState: {
+    action: 'login'
+  },
+
+  appStateEvents: {
+    'change:authenticated': 'onChangeAuthenticated'
+  },
+
+  // Sync with application state.
+  initialize(options={}) {
+    this.appState = options.appState;
+    this.syncEntityEvents(this.appState, this.appStateEvents);
+  },
+
+  // Called on initialize and on change app 'authenticated'.
+  onChangeAuthenticated(appState, authenticated) {
+    if (authenticated) {
+      this.set('action', 'logout');
+    } else {
+      this.set('action', 'login');
+    }
+  }
+});
+
+// Alternately a login or logout button depending on app authentication state.
+var ToggleAuthView = Mn.ItemView({
+  template: 'This Button Label Will Be Replaced',
+  tagName: 'button',
+
+  triggers: {
+    'click': 'loginLogout'
+  },
+
+  stateEvents: {
+    'change:action': 'onChangeAction'
+  },
+
+  // Create and sync with my own State injected with app State.
+  initialize(options={}) {
+    this.appChannel = Radio.channel('app');
+    this.state = new ToggleAuthState({
+      appState: options.appState,
+      component: this
+    });
+    Mn.State.syncEntityEvents(this, this.state, this.stateEvents, 'render');
+  },
+
+  // Button text will be updated on every render and 'action' change.
+  onChangeAction(state, action) {
+    this.$el.text(action);
+  },
+
+  // Login/logout toggle will always fire the appropriate action.
+  loginLogout() {
+    this.appChannel.request(this.state.get('action'));
+  }
+});
+
+var appController = new AppController();
+var appState = appController.getState();
+var toggleAuthView = new ToggleAuthView({ appState: appState });
+
+var appRegion = new Region({ el: '#app-region' });
+appRegion.show(toggleAuthView);
+```
+
+### Sub-Applications
+
+Within an application modularized into sub-applications, state can cascade from app -> sub-app -> view.  In this particular configuration, Radio can be used to make both sub-application and application requests.
+
+<img src="https://docs.google.com/drawings/d/1NXH3_U2d_FkImq7J-il3o7wXdcwEi_4OvXX2L_DPRHI/pub?w=1086&amp;h=921" width=640>
+
+### Sub-Views
+
+Within a deeply nested, complex view that requires a deeper layer of state, perhaps for child views within a CollectionView, state can cascade from app -> view -> sub-view.
+
+<img src="https://docs.google.com/drawings/d/1ISI1y-UtU_fZgxBp4b-R9dstfrABSOrADiuUtjDJPKE/pub?w=1086&amp;h=921" width=640>
+
+## State API
 
 ### Class Properties
 
-**`modelClass`**
+##### `modelClass`
 
-Optional state model class to instantiate, otherwise a pure Backbone.Model will be used.
+Optional Backbone.Model class to instantiate, otherwise a pure Backbone.Model will be used.
 
-**`defaultState`**
+##### `defaultState`
 
 Optional default state attributes hash.  These will be applied to the underlying model when it is initialized.
 
-**`componentEvents`**
+##### `componentEvents`
 
 Optional hash of component event bindings.  Enabled by passing `{ component: <Marionette object> }` as an option or by using a StateBehavior, in which case `component` is the view.
 
 ### Initialization Options
 
-**`component`**
-
-Optional Marionette object to which to bind lifecycle and events.  When `component` is destroyed the State instance is also destroyed.  The `componentEvents` events hash is also bound to `component`.  When using State with a StateBehavior, `component` is automatically set to the view.
-
-**`initialState`**
+##### `initialState`
 
 Optional initial state attributes.  These attributes are combined with `defaultState` for initializing the underlying state model, and become the basis for future `reset()` calls.
 
+##### `component`
+
+Optional Marionette object to which to bind lifecycle and events.  The `componentEvents` events hash is bound to `component`.  When `component` is destroyed the State instance is also destroyed, unless `preventDestroy: true` is also passed.
+
+##### `preventDestroy`
+
+Only applies when `component` is provided.  By default, the State instance is destroyed when `component` is destroyed, but`preventDestroy: true` will prevent this behavior.
+
 ### Methods
 
-**`setState(attrs)`**
+##### `getModel()`
 
-Resets the underlying state model and `initialState` (destructively) to conform to the passed attrs.  Future calls to `reset()` will return to this point.
+Returns the underlying model.
 
-**`getModel()`**
+##### `getInitialState()`
 
-Returns the underlying state model.
+A clone of model's attributes at initialization.
 
-**`getInitialState()`**
+##### `get(attr)`
 
-Returns a clone of the initial state hash leveraged by `reset()`.
+Proxy to model `get(attr)`.
 
-**`reset()`**
+##### `set(key, val, options)`
 
-Resets the state model to its value as of initialization or the last `setState()`.
+Proxy to model `set(key, val, options)`.
 
-**`set(attrs, options)`**
+##### `reset(attrs, options)`
 
-Proxy to state model `set(attrs, options)`.
+Resets model to its attributes at initialization.  If any `attrs` are provided, they will override the initial value.  `options` are passed to the underlying model `#set`.
 
-**`get(attr)`**
+##### `getChanged()`
 
-Proxy to state model `get(attr)`.
+Proxy to model `changedAttributes()`.
 
-**`setComponent(eventedObj)`**
+##### `getPrevious()`
 
-Bind lifetime to an evented (Backbone.Events) object, e.g. a Backbone.Model or a Marionette object.  If the object has a `destroy` method, State will be destroyed automatically along with the object.  `componentEvents` are also bound to this object.
+Proxy to model `previousAttributes()`.
 
-**`getComponent()`**
+##### `hasAnyChanaged(...attrs)`
 
-Returns current component.
+Determine if any of the passed attributes were changed during the last modification.  Example:
 
-**`syncEntityEvents(entity, entityEvents)`**
-
-Binds `entityEvents` to `entity` exactly like `Marionette.bindEntityEvents`, but also calls handlers immediately for the purpose of initializing state.  See [Marionette.State Functions API](#marionette-state-functions-api): `syncEntityEvents`.
-
-## Marionette.State.Behavior API
-
-A StateBehavior adds Marionette.State seamlessly to a view, turning a view into a sophisticated component with separated view logic at almost no cost (next to no code bloat). 
-
-### Behavior Options
-
-**`stateClass`**
-
-Type of Marionette.State to instantiate
-
-**`initialState`**
-
-Optional initial state attrs
-
-**`stateOptions`**
-
-Options to pass to Marionette.State
-
-**`mapOptions`**
-
-`mapOptions` permits declaratively mapping view options to state options in a few different ways:
-
-`stateOption: 'viewOption'`
-
-- `view.options.viewOption` will be passed as `stateOption`.
-
-`stateOption: 'viewOption.property'`
-
-- `view.options.viewOption.property` will be passed as `stateOption`.
-
-`stateOption: true`
-
-- `view.options.stateOptions` will be passed as `stateOption`.
-
-`stateOption: function(viewOptions)`
-
-- At view initialization time, return value of function given `view.options` will be passed as `stateOption`.
-
-Using `mapOptions`, the view can be treated as a sophisticated "component", including receiving component options, but instead of managing component options internally it may proxy them to the State instance.
-
-**`serialize`**
-
-Whether to serialize state into template (default false).  State will be serialized underneath the `state` property.  For example:
-
-```
-var OkayState = Marionette.State.extend({
-  
-  defaultState: {
-    disabled: 'disabled'
-  }
-});
-
-var OkayView = Marionette.ItemView.extend({
-
-  template: '<button <%= state.disabled %>>Okay</button>'
-  
-  behaviors: {
-    State: {
-      behaviorClass: Marionette.State.Behavior,
-      stateClass: OkayState,
-      serialize: true
-    }
-  }
+```js
+var StatefulView = Mn.ItemView.extend({
+  template: false,
 
   stateEvents: {
-    'change': 'render'
-  }
-})
-```
-
-**`syncEvent`**
-
-View event on which to call state handlers, keeping the DOM in sync with state. Defaults to 'render'.
-
-### View Side Effects
-
-**`view.state`**
-
-On initialization, StateBehavior will set the `state` property on the View to the underlying state model of the State instance (`State.getModel()`).  This is useful for manually determining specific state values on the fly or passing to child views to keep them in sync with the overall component.
-
-_Please note:_ A View calling `this.state.set()` is an anti-pattern, as it violates the one-way data flow described in the introduction.
-
-## Marionette.State Functions API
-
-**`syncEntityEvents(target, entity, entityEvents, event)`**
-
-Binds `entityEvents` handlers located on `target` to `entity` using `Marionette.bindEntityEvents`, but then calls handlers either immediately or on `event` to ensure `target` is synchronized with `entity` state.  This synchronization step is timed as follows:
-
-- If `event` is provided, then call handlers whenever `target` fires `event`.
-- If `event` is not provided, then call handlers immediately.
-
-**Example _without_ syncEntityEvents.**
-
-```js
-var View = Marionette.ItemView.extend({
-
-  entityEvents: {
-    'change:foo': 'onChangeFoo',
-    'change:bar': 'onChangeBar'
-  }
-
-  initialize: function (options) {
-    this.entity = new Backbone.Model({
-      foo: 1,
-      bar: 2  
-    });
-    Marionette.bindEntityEvents(this, this.entity, this.entityEvents);
+    'change': 'onStateChange'
   },
 
-  onChangeFoo: function (entity, foo) {
-    if (foo) this.$el.addClass('foo');
-    else this.$el.removeClass('foo');
+  initialize(options={}) {
+    this.state = options.state;
+    Mn.State.syncEntityEvents(this, this.state, this.stateEvents, 'render');
   },
 
-  onChangeBar: function (entity, bar) {
-    if (bar) this.$el.addClass('bar');
-    else this.$el.removeClass('bar');
-  },
-
-  onRender: function () {
-    this.onChangeFoo(this.entity, this.entity.get('foo'));
-    this.onChangeBar(this.entity, this.entity.get('bar'));
+  onStateChange(state) {
+    if (!state.hasAnyChanged('foo', 'bar')) {
+      this.$el.addClass('is-foo-bar');
+    } else {
+      this.$el.removeClass('is-foo-bar');
+    }
   }
 });
 ```
 
-**Example _with_ syncEntityEvents.**
+##### `bindComponent(component, options)`
 
-```js
-var View = Marionette.ItemView.extend({
+Bind `componentEvents` to `component` and cascade destroy to self when component fires 'destroy'.  This prevents a state from outliving its component and causing a memory leak.  To prevent self-destroy behavior, pass `preventDestroy: true` as an option.
 
-  entityEvents: {
-    'change:foo': 'onChangeFoo',
-    'change:bar': 'onChangeBar'
-  }
+##### `unbindComponent(component)`
 
-  initialize: function (options) {
-    this.entity = new Backbone.Model({
-      foo: 1,
-      bar: 2  
-    });
-    Marionette.State.syncEntityEvents(this, this.entity, this.entityEvents, 'render');
-  },
+Unbind `componentEvents` from `component` and stop listening to component 'destroy' event.
 
-  onChangeFoo: function (entity, foo) {
-    if (foo) this.$el.addClass('foo');
-    else this.$el.removeClass('foo');
-  },
+##### `syncEntityEvents(entity, bindings, event)`
 
-  onChangeBar: function (entity, bar) {
-    if (bar) this.$el.addClass('bar');
-    else this.$el.removeClass('bar');
-  }
-);
-```
+Attaches event bindings `bindings` to `entity` using `Mn.bindEntityEvents`.  Ensures initial state is synchronized as well by calling `bindings` handlers whenever State fires `event` or else calls them immediately if `event` is not defined.  Returns a `Syncing` instance, which contains a single public method `#stop` that may be used to cancel the syncing.
 
-Event handlers are called with the same API as [Backbone.Model/Collection events](http://backbonejs.org/#Events-catalog).  Only the following events trigger state synchronization.
+## State Functions API
+
+##### `syncEntityEvents(target, entity, bindings, event)`
+
+Attaches event bindings `bindings` to `entity` using `Mn.bindEntityEvents` in the context of `target`.  Ensures initial state is synchronized as well by calling `bindings` handlers whenever `target` fires `event` or else calls them immediately if `event` is not defined.
+
+Event handlers are called with the same arguments [as defined in Backbone](http://backbonejs.org/#Events-catalog).  Only the following event bindings will be synchronized.
 
 ```
 Backbone.Model
   'all'          (model)
   'change'       (model)
   'change:value' (model, value)
+
 Backbone.Collection
   'all'          (collection)
   'reset'        (collection)
   'change'       (collection)
 ```
 
-Notably, Collection `add` and `remove` events do not trigger state synchronization, because they do not have to do with initial state, but rather iterative state.  However, one may combine them, such as `add remove reset`, if one is interested in both initial and iterative state, since `add` and `remove` will not trigger additional handler calls--only `reset` will.
+Notably, Collection `add` and `remove` event handlers will not be synchronized, because they do not have a backing value (the added or removed element is not known until the event occurs).  However, one may combine them with `reset` if one is interested in a syncable state that also tracks with changes in the collection.
 
-For event mappings with multiple events matching the rules above, all handlers are called for each event.  This is closest to Backbone.Events behavior, but be careful because you may accidently trigger more handler calls than you intended.  In the following example, both handlers are each called with values of 'foo' and 'bar':
+Just like Backbone, all handlers will be called for all supported events.  In the following binding, both `handler1` and `handler2` will be called twice on sync--once with the value of `foo` and once with the value of `bar`:
 
 ```js
-// These entityEvents
-entityEvents: {
-  'change:foo change:bar': 'onChangeFoo onChangeBar'
-}
-
-// Result in these calls
-target.doSomething(model, model.get('foo'))
-target.doSomethingElse(model, model.get('foo'))
-target.doSomething(model, model.get('bar'))
-target.doSomethingElse(model, model.get('bar'))
+{ 'change:foo change:bar': 'handler1 handler2' }
 ```
 
-If one must react to two specific value changes with one or more of the same handlers, consider using a global 'change' event then checking the entity's [`changedAttributes()`](http://backbonejs.org/#Model-changedAttributes) object for the existence of the desired properties.  This is also the best approach for a familiar related scenario:
+###### Example without syncEntityEvents
 
-`modelEvents: {'change:foo change:bar': 'render'}` is best handled by
-`modelEvents: {'change': 'onChange'}`, where `onChange` checks `model.changedAttributes()` for `foo` and `bar`.
+```js
+var View = Mn.ItemView.extend({
+
+  entityEvents: {
+    'change:foo': 'onChangeFoo'
+  }
+
+  initialize() {
+    this.entity = new Backbone.Model({
+      foo: true 
+    });
+    this.bindEntityEvents(this.entity, this.entityEvents);
+  },
+
+  onChangeFoo(entity, foo) {
+    if (foo) {
+      this.$el.addClass('foo');
+    } else {
+      this.$el.removeClass('foo');
+    }
+  },
+
+  onRender() {
+    this.onChangeFoo(this.entity, this.entity.get('foo'));
+  }
+});
+```
+
+###### Example with syncEntityEvents
+
+```js
+var View = Mn.ItemView.extend({
+
+  entityEvents: {
+    'change:foo': 'onChangeFoo'
+  }
+
+  initialize() {
+    this.entity = new Backbone.Model({
+      foo: 1 
+    });
+    Mn.State.syncEntityEvents(this, this.entity, this.entityEvents, 'render');
+  },
+
+  onChangeFoo(entity, foo) {
+    if (foo) {
+      this.$el.addClass('foo');
+    } else {
+      this.$el.removeClass('foo');
+    }
+  }
+);
+```

@@ -1,5 +1,9 @@
+import _ from 'underscore';
+import Backbone from 'backbone';
+import Mn from 'backbone.marionette';
+
 // Manage state for a component.
-Mn.State = Mn.Object.extend({
+const State = Mn.Object.extend({
 
   // State model class to instantiate
   modelClass: undefined,
@@ -20,85 +24,137 @@ Mn.State = Mn.Object.extend({
   _initialState: undefined,
 
   // options {
-  //   component:    {Marionette object} An arbitrary object for lifetime and event binding.
-  //     May be any Marionette object, so long as it has a destroy() method.
-  //   initialState: {attrs} Optional initial state (defaultState will still be applied)
-  constructor: function (options) {
-    options = options || {};
-    // Bind to component
-    if (options.component) this.setComponent(options.component);
-
+  //   initialState: {object} Attributes that will override `defaultState`.  The result of
+  //     defaultState + initialState is the state reverted to by `#reset`.
+  //   component: {Mn object} Object to which to bind `componentEvents` and also lifecycle;
+  //     i.e., when `component` fires 'destroy', then destroy myself.
+  //   preventDestroy: {boolean} If true, then this will not destroy on `component` destroy.
+  // }
+  constructor({ initialState, component, preventDestroy }={}) {
     // State model class is either passed in, on the class, or a standard Backbone model
-    this.modelClass = options.modelClass || this.modelClass || Bb.Model;
+    this.modelClass = this.modelClass || Backbone.Model;
 
-    this.setState(options.initialState);
+    // Initialize state
+    this._initState(initialState);
 
-    Mn.State.__super__.constructor.apply(this, arguments);
+    if (component) {
+      this.bindComponent(component, { preventDestroy });
+    }
+
+    State.__super__.constructor.apply(this, arguments);
   },
 
   // Initialize model with attrs or reset it, destructively, to conform to attrs.
-  setState: function (attrs, options) {
+  _initState(attrs) {
+    // Set initial state.
     this._initialState = _.extend({}, this.defaultState, attrs);
 
-    // If model is set, reset it. Otherwise, create it.
     if (this._model) {
-      this.reset(options);
+      // Reset existing model with initial state.
+      this.reset();
     } else {
+      // Create new model with initial state.
+      /* eslint-disable new-cap */
       this._model = new this.modelClass(this._initialState);
+      this._proxyModelEvents(this._model);
     }
   },
 
   // Return the state model.
-  getModel: function () {
+  getModel() {
     return this._model;
   },
 
   // Returns the initiate state, which is reverted to by reset()
-  getInitialState: function () {
+  getInitialState() {
     return _.clone(this._initialState);
   },
 
-  // Return state to its initial value, destructively (uses {unset:true}).
-  reset: function (options) {
-    options = _.extend({ unset: true }, options);
-    this._model.set(this._initialState, options);
+  // Proxy to model get().
+  get(attr) {
+    return this._model.get(attr);
   },
 
   // Proxy to model set().
-  set: function () {
-    if (!this._model) throw new Mn.Error('Initialize state first.');
-    this._model.set.apply(this._model, arguments);
+  set(key, val, options) {
+    this._model.set(key, val, options);
+    return this;
   },
 
-  // Proxy to model get().
-  get: function () {
-    if (!this._model) throw new Mn.Error('Initialize state first.');
-    return this._model.get.apply(this._model, arguments);
+  // Return state to its initial value.
+  // If `attrs` is provided, they will override initial values for a "partial" reset.
+  // Initial state will remain unchanged regardless of override attributes.
+  reset(attrs, options) {
+    var resetAttrs = _.extend({}, this._initialState, attrs);
+    this._model.set(resetAttrs, options);
+    return this;
   },
 
-  // Bind lifetime and component events to an object initialized with Backbone.Events, such as
-  // a Backbone model or a Marionette object.
-  setComponent: function (eventedObj) {
-    this.stopListening(this._component, 'destroy');
-    if (this.componentEvents) {
-      this.unbindEntityEvents(this._component, this.componentEvents);
+  // Proxy to model changedAttributes().
+  getChanged() {
+    return this._model.changedAttributes();
+  },
+
+  // Proxy to model previousAttributes().
+  getPrevious() {
+    return this._model.previousAttributes();
+  },
+
+  // Determine if any of the passed attributes were changed during the last modification.
+  hasAnyChanged(...attrs) {
+    return !!_.chain(this._model.changed)
+      .keys()
+      .intersection(attrs)
+      .size()
+      .value();
+  },
+
+  // Bind `componentEvents` to `component` and cascade destroy to self when component fires
+  // 'destroy'.  To prevent self-destroy behavior, pass `preventDestroy: true` as an option.
+  bindComponent(component, { preventDestroy }={}) {
+    this.bindEntityEvents(component, this.componentEvents);
+    if (!preventDestroy) {
+      this._bindLifecycle(component);
     }
-    this._component = eventedObj;
-    this.listenToOnce(this._component, 'destroy', this.destroy);
-    if (this.componentEvents) {
-      this.bindEntityEvents(this._component, this.componentEvents);
+  },
+
+  // Unbind `componentEvents` from `component` and stop listening to component 'destroy' event.
+  unbindComponent(component) {
+    this.unbindEntityEvents(component, this.componentEvents);
+    this._unbindLifecycle(component);
+  },
+
+  // When `component` fires "destroy" event, this State will also destroy.
+  _bindLifecycle(component) {
+    if (!this._boundDestroy) {
+      this._boundDestroy = this.destroy.bind(this);
     }
+    this.listenTo(component, 'destroy', this._boundDestroy);
+    return this;
   },
 
-  // Marionette object bound to
-  getComponent: function () {
-    return this._component;
+  // Stop listening to `component` "destroy" event.
+  _unbindLifecycle(component) {
+    this.stopListening(component, 'destroy', this._boundDestroy);
+    return this;
   },
 
-  // Binds entityEvents to entity exactly like Marionette.bindEntityEvents, but also
-  // calls certain handlers immediately for the purpose of initializing state.
-  // See StateFunctions#syncEntityEvents.
-  syncEntityEvents: function (entity, entityEvents) {
-    Mn.State.syncEntityEvents(this, entity, entityEvents);
+  // Proxy to StateFunctions#syncEntityEvents.
+  syncEntityEvents(entity, entityEvents, event) {
+    State.syncEntityEvents(this, entity, entityEvents, event);
+    return this;
+  },
+
+  // Convert model events to state events
+  _proxyModelEvents: function (other) {
+    this.listenTo(other, 'all', function () {
+      if (arguments.length > 1 && arguments[1] === this._model) {
+        // Replace model argument with State
+        arguments[1] = this;
+      }
+      this.trigger.apply(this, arguments);
+    });
   }
 });
+
+export default State;

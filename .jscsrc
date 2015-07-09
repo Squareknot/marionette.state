@@ -1,69 +1,17 @@
 {
-  // Keywords
-  "requireSpaceAfterKeywords": ["if", "else", "for", "while", "do", "switch", "return", "try", "catch"],
-  "disallowKeywords": ["with", "eval"],
+  "preset": "google",
+  "maximumLineLength": 100,
+  
+  // ES6
+  "esnext": true,
 
-  // Functions
-  "requireParenthesesAroundIIFE": true,
-  "disallowSpacesInNamedFunctionExpression": {
-    "beforeOpeningRoundBrace": true
-  },
+  // Crockford anonymous function spacing
+  "disallowSpacesInAnonymousFunctionExpression": null,
   "requireSpacesInAnonymousFunctionExpression": {
     "beforeOpeningRoundBrace": true
   },
 
-  // Blocks
-  "disallowEmptyBlocks": true,
-  "disallowNewlineBeforeBlockStatements": true,
-  "requireSpaceBeforeBlockStatements": true,
-
-  // Curlies, brackets, parens
-  "disallowSpaceAfterObjectKeys": true,
-  "requireSpacesInsideObjectBrackets": "allButNested",
-  "disallowSpacesInsideArrayBrackets": true,
-  "disallowSpacesInsideParentheses": true,
-
-  // Line breaking  
-  "requireCommaBeforeLineBreak": true,
-  "requireOperatorBeforeLineBreak": ["+", "-", "/", "*", "=", "==", "===", "!=", "!==", ">", ">=", "<", "<="],
-  "disallowMultipleLineBreaks": true,
-
-  // Unary operators
-  "disallowSpaceAfterPrefixUnaryOperators": ["++", "--", "+", "-", "~", "!"],
-  "disallowSpaceBeforePostfixUnaryOperators": ["++", "--"],
-
-  // Binary operators
-  "disallowSpaceBeforeBinaryOperators": [","],
-  "requireSpaceBeforeBinaryOperators": ["?", "+", "-", "/", "*", "=", "==", "===", "!=", "!==", ">", ">=", "<", "<=", "&&", "||"],
-  "requireSpaceAfterBinaryOperators": [",", "?", "+", "-", "/", "*", "=", "==", "===", "!=", "!==", ">", ">=", "<", "<=", "&&", "||"],
-
-  // Ternary operator
-  "requireSpacesInConditionalExpression": {
-    "afterTest": true,
-    "beforeConsequent": true,
-    "afterConsequent": true,
-    "beforeAlternate": true
-  },
-
-  // Per-line whitespace
-  "validateIndentation": 2,
-  "disallowTrailingWhitespace": true,
-  "requireLineFeedAtFileEnd": true,
-
-  // Do not allow reassignment of "this" (prefer bind instead)
-  "safeContextKeyword": "bind",
-
-  // Misc
-  "disallowMultipleLineStrings": true,
-  "requireDotNotation": true,
-  "requireSpaceAfterLineComment": true,
-  "disallowYodaConditions": true,
-  "disallowTrailingComma": true,
-
-  // JSHint formatting
-  "requireCapitalizedConstructors": true,
-  "maximumLineLength": 100,
-  "validateQuoteMarks": { "mark": "'", "escape": true },
-  "requireCamelCaseOrUpperCaseIdentifiers": true,
-  "disallowMultipleVarDecl": true
+  // More readable inline objects
+  "disallowSpacesInsideObjectBrackets": null,
+  "requireSpacesInsideObjectBrackets": "allButNested"
 }
