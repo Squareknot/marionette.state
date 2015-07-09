@@ -320,7 +320,7 @@ var ToggleAuthView = Mn.ItemView({
 
   // Create and bind to my own State, which is injected with app State.
   initialize(options={}) {
-    this.appState = Radio.channel('app');
+    this.appChannel = Radio.channel('app');
     this.state = new ToggleAuthState({
       appState: options.appState,
       component: this
@@ -335,7 +335,7 @@ var ToggleAuthView = Mn.ItemView({
 
   // Login/logout toggle will always fire the appropriate action.
   loginLogout() {
-    this.appState.trigger(this.state.get('action'));
+    this.appChannel.trigger(this.state.get('action'));
   }
 });
 
