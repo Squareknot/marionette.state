@@ -1,6 +1,6 @@
 {
   "name": "marionette.state",
-  "description": "One-way data flow architecture for stateful components within a Backbone.Marionette app.",
+  "description": "One-way state architecture for a Marionette.js app.",
   "version": "0.3.0",
   "homepage": "https://github.com/Squareknot/marionette.state",
   "main": "build/marionette.state.js",

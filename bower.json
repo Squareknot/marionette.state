@@ -5,7 +5,7 @@
   "authors": [
     "ianmstew <ianmstew@gmail.com>"
   ],
-  "description": "One-way data flow architecture for stateful components within a Backbone.Marionette app.",
+  "description": "One-way state architecture for a Marionette.js app.",
   "main": "build/marionette.state.js",
   "keywords": [
     "backbone",
