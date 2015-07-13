@@ -91,3 +91,12 @@ export function syncEntityEvents(target, entity, bindings, event) {
   }
   return syncing;
 }
+
+// Determine if any of the passed attributes were changed during the last modification of `model`.
+export function hasAnyChanged(model, ...attrs) {
+  return !!_.chain(model.changedAttributes())
+    .keys()
+    .intersection(attrs)
+    .size()
+    .value();
+}

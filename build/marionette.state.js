@@ -101,13 +101,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     },
 
     // Proxy to model changedAttributes().
-    getChanged: function getChanged() {
+    changedAttributes: function changedAttributes() {
       return this._model.changedAttributes();
-    },
-
-    // Proxy to model previousAttributes().
-    getPrevious: function getPrevious() {
-      return this._model.previousAttributes();
     },
 
     // Determine if any of the passed attributes were changed during the last modification.
@@ -116,7 +111,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         attrs[_key] = arguments[_key];
       }
 
-      return !!_.chain(this._model.changed).keys().intersection(attrs).size().value();
+      return State.hasAnyChanged.apply(State, [this].concat(attrs));
     },
 
     // Bind `componentEvents` to `component` and cascade destroy to self when component fires
@@ -172,6 +167,23 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   });
 
   var state = State;
+
+  var state_functions = Object.defineProperties({}, {
+    syncEntityEvents: {
+      get: function get() {
+        return syncEntityEvents;
+      },
+      configurable: true,
+      enumerable: true
+    },
+    hasAnyChanged: {
+      get: function get() {
+        return hasAnyChanged;
+      },
+      configurable: true,
+      enumerable: true
+    }
+  });
 
   var modelEventMatcher = /^(?:all|change|change:(.+))$/;
   var collectionEventMatcher = /^(?:all|reset)$/;
@@ -265,7 +277,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     return syncing;
   }
 
-  state.syncEntityEvents = syncEntityEvents;
+  // Determine if any of the passed attributes were changed during the last modification of `model`.
+  function hasAnyChanged(model) {
+    for (var _len2 = arguments.length, attrs = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+      attrs[_key2 - 1] = arguments[_key2];
+    }
+
+    return !!_.chain(model.changedAttributes()).keys().intersection(attrs).size().value();
+  }
+
+  _.extend(state, state_functions);
 
   var index = state;
 

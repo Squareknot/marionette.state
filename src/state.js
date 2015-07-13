@@ -91,22 +91,13 @@ const State = Mn.Object.extend({
   },
 
   // Proxy to model changedAttributes().
-  getChanged() {
+  changedAttributes() {
     return this._model.changedAttributes();
-  },
-
-  // Proxy to model previousAttributes().
-  getPrevious() {
-    return this._model.previousAttributes();
   },
 
   // Determine if any of the passed attributes were changed during the last modification.
   hasAnyChanged(...attrs) {
-    return !!_.chain(this._model.changed)
-      .keys()
-      .intersection(attrs)
-      .size()
-      .value();
+    return State.hasAnyChanged(this, ...attrs);
   },
 
   // Bind `componentEvents` to `component` and cascade destroy to self when component fires
