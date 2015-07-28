@@ -105,6 +105,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       return this._model.changedAttributes();
     },
 
+    // Proxy to model previousAttributes().
+    previousAttributes: function previousAttributes() {
+      return this._model.previousAttributes();
+    },
+
     // Determine if any of the passed attributes were changed during the last modification.
     hasAnyChanged: function hasAnyChanged() {
       for (var _len = arguments.length, attrs = Array(_len), _key = 0; _key < _len; _key++) {
