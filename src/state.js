@@ -95,6 +95,11 @@ const State = Mn.Object.extend({
     return this._model.changedAttributes();
   },
 
+  // Proxy to model previousAttributes().
+  previousAttributes() {
+    return this._model.previousAttributes();
+  },
+
   // Determine if any of the passed attributes were changed during the last modification.
   hasAnyChanged(...attrs) {
     return State.hasAnyChanged(this, ...attrs);
