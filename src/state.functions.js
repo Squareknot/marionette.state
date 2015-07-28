@@ -92,6 +92,13 @@ export function syncEntityEvents(target, entity, bindings, event) {
   return syncing;
 }
 
+// Whether model has changed since the last `set()`
+export function hasChanged(model) {
+  // Support Marionette.State or Backbone.Model performantly.
+  if (model._model) { model = model._model; }
+  return !!_.keys(model.changed).length;
+}
+
 // Determine if any of the passed attributes were changed during the last modification of `model`.
 export function hasAnyChanged(model, ...attrs) {
   // Support Marionette.State or Backbone.Model performantly.
