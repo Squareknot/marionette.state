@@ -94,7 +94,9 @@ export function syncEntityEvents(target, entity, bindings, event) {
 
 // Determine if any of the passed attributes were changed during the last modification of `model`.
 export function hasAnyChanged(model, ...attrs) {
-  return !!_.chain(model.changedAttributes())
+  // Support Marionette.State or Backbone.Model performantly.
+  if (model._model) { model = model._model; }
+  return !!_.chain(model.changed)
     .keys()
     .intersection(attrs)
     .size()

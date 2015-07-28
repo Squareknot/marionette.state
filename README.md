@@ -587,7 +587,11 @@ var StatefulView = Mn.ItemView.extend({
   },
 
   onStateChange(state) {
-    if (state.hasAnyChanged('foo', 'bar')) {
+    // Only continue if syncing or foo/bar have changed.
+    if (state.hasChanged() && !state.hasAnyChanged('foo', 'bar')) {
+      return;
+    }
+    if (state.get('foo') && state.get('bar')) {
       this.$el.addClass('is-foo-bar');
     } else {
       this.$el.removeClass('is-foo-bar');
@@ -706,7 +710,7 @@ Just like Backbone, all handlers will be called for all supported events on sync
 { 'change:foo change:bar': 'handler' }
 ```
 
-Because handlers called multiple times for a single sync is probably not desired behavior, the best practise to synchronize multiple attributes with a single handler is the same as standard Backbone: Listen for `change` and check `model.changed` for particular attributes.
+Because handlers called multiple times for a single sync is probably not desired behavior, the best practise to synchronize multiple attributes with a single handler is the same as standard Backbone: Listen for `change` and check `model.changed` for particular attributes.  The only addition is a check for changed
 
 ```js
 modelEvents: { 'change': 'handler' },
@@ -717,10 +721,11 @@ initialize() {
 },
 
 handler(model) {
-  if (!_.isUndefined(model.changed.foo) || !_.isUndefined(model.changed.bar)) {
+  var changed = model.changedAttributes();
+  if (changed && (!_.isUndefined(changed.foo) || !_.isUndefined(changed.bar)) {
     return;
   }
-  // foo or bar have changed
+  // Either syncing or foo/bar have changed
 }
 ```
 
@@ -735,9 +740,9 @@ initialize() {
 },
 
 handler(state) {
-  if (!state.hasAnyChanged('foo', 'bar')) {
+  if (state.hasChanged() && !state.hasAnyChanged('foo', 'bar')) {
     return;
   }
-  // foo or bar have changed
+  // Either syncing or foo/bar have changed
 }
 ```

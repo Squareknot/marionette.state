@@ -110,7 +110,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       return this._model.previousAttributes();
     },
 
-    // Determine if any of the passed attributes were changed during the last modification.
+    // Whether state has changed since the last `set()`
+    hasChanged: function hasChanged() {
+      return !!_.keys(this._model.changed).length;
+    },
+
+    // Whether any of the passed attributes were changed during the last modification
     hasAnyChanged: function hasAnyChanged() {
       for (var _len = arguments.length, attrs = Array(_len), _key = 0; _key < _len; _key++) {
         attrs[_key] = arguments[_key];
@@ -284,11 +289,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
   // Determine if any of the passed attributes were changed during the last modification of `model`.
   function hasAnyChanged(model) {
+    // Support Marionette.State or Backbone.Model performantly.
+    if (model._model) {
+      model = model._model;
+    }
+
     for (var _len2 = arguments.length, attrs = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
       attrs[_key2 - 1] = arguments[_key2];
     }
 
-    return !!_.chain(model.changedAttributes()).keys().intersection(attrs).size().value();
+    return !!_.chain(model.changed).keys().intersection(attrs).size().value();
   }
 
   _.extend(state, state_functions);
