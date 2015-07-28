@@ -112,7 +112,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     // Whether state has changed since the last `set()`
     hasChanged: function hasChanged() {
-      return !!_.keys(this._model.changed).length;
+      return State.hasChanged(this);
     },
 
     // Whether any of the passed attributes were changed during the last modification
@@ -182,6 +182,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     syncEntityEvents: {
       get: function get() {
         return syncEntityEvents;
+      },
+      configurable: true,
+      enumerable: true
+    },
+    hasChanged: {
+      get: function get() {
+        return hasChanged;
       },
       configurable: true,
       enumerable: true
@@ -285,6 +292,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       syncing._now();
     }
     return syncing;
+  }
+
+  // Whether model has changed since the last `set()`
+  function hasChanged(model) {
+    // Support Marionette.State or Backbone.Model performantly.
+    if (model._model) {
+      model = model._model;
+    }
+    return !!_.keys(model.changed).length;
   }
 
   // Determine if any of the passed attributes were changed during the last modification of `model`.
