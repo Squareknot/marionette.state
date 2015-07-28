@@ -100,7 +100,12 @@ const State = Mn.Object.extend({
     return this._model.previousAttributes();
   },
 
-  // Determine if any of the passed attributes were changed during the last modification.
+  // Whether state has changed since the last `set()`
+  hasChanged() {
+    return !!_.keys(this._model.changed).length;
+  },
+
+  // Whether any of the passed attributes were changed during the last modification
   hasAnyChanged(...attrs) {
     return State.hasAnyChanged(this, ...attrs);
   },
