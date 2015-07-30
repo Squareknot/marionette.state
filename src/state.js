@@ -95,6 +95,11 @@ const State = Mn.Object.extend({
     return this._model.changedAttributes();
   },
 
+  // Proxy to model previous().
+  previous(attr) {
+    return this._model.previous(attr);
+  },
+
   // Proxy to model previousAttributes().
   previousAttributes() {
     return this._model.previousAttributes();
