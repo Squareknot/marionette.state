@@ -105,6 +105,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       return this._model.changedAttributes();
     },
 
+    // Proxy to model previous().
+    previous: function previous(attr) {
+      return this._model.previous(attr);
+    },
+
     // Proxy to model previousAttributes().
     previousAttributes: function previousAttributes() {
       return this._model.previousAttributes();
