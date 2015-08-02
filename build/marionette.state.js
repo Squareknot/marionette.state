@@ -115,11 +115,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       return this._model.previousAttributes();
     },
 
-    // Whether state has changed since the last `set()`
-    hasChanged: function hasChanged() {
-      return State.hasChanged(this);
-    },
-
     // Whether any of the passed attributes were changed during the last modification
     hasAnyChanged: function hasAnyChanged() {
       for (var _len = arguments.length, attrs = Array(_len), _key = 0; _key < _len; _key++) {
@@ -191,13 +186,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       configurable: true,
       enumerable: true
     },
-    hasChanged: {
-      get: function get() {
-        return hasChanged;
-      },
-      configurable: true,
-      enumerable: true
-    },
     hasAnyChanged: {
       get: function get() {
         return hasAnyChanged;
@@ -213,21 +201,32 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
   // Sync individual event binding 'event1' => 'handler1 handler2'.
   function syncBinding(target, entity, event, handlers) {
-    var changeAttrMatch;
+    var changeOpts = { syncing: true };
+    var modelEventMatch;
+
+    // Only certain model/collection events are syncable.
     var collectionMatch = entity instanceof Backbone.Collection && event.match(collectionEventMatcher);
-    var modelMatch = (entity instanceof Backbone.Model || entity instanceof state) && (changeAttrMatch = event.match(modelEventMatcher));
+    var modelMatch = (entity instanceof Backbone.Model || entity instanceof state) && (modelEventMatch = event.match(modelEventMatcher));
     if (!collectionMatch && !modelMatch) {
       return;
     }
 
-    var changeValue = changeAttrMatch && entity.get(changeAttrMatch[1]);
+    // Collect change event arguments.
+    var changeArgs = [entity];
+    var changeAttr;
+    if (modelEventMatch && (changeAttr = modelEventMatch[1])) {
+      changeArgs.push(entity.get(changeAttr));
+    }
+    changeArgs.push(changeOpts);
+
+    // Call change event handler.
     if (_.isFunction(handlers)) {
-      handlers.call(target, entity, changeValue);
+      handlers.apply(target, changeArgs);
     } else {
       var handlerKeys = handlers.split(spaceMatcher);
       for (var i = 0; i < handlerKeys.length; i++) {
         var handlerKey = handlerKeys[i];
-        target[handlerKey](entity, changeValue);
+        target[handlerKey].apply(target, changeArgs);
       }
     }
   }
@@ -297,15 +296,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       syncing._now();
     }
     return syncing;
-  }
-
-  // Whether model has changed since the last `set()`
-  function hasChanged(model) {
-    // Support Marionette.State or Backbone.Model performantly.
-    if (model._model) {
-      model = model._model;
-    }
-    return !!_.keys(model.changed).length;
   }
 
   // Determine if any of the passed attributes were changed during the last modification of `model`.
