@@ -569,7 +569,7 @@ Proxy to model `changedAttributes()`.
 
 Proxy to model `previousAttributes()`.
 
-##### `hasAnyChanaged(...attrs)`
+##### `hasAnyChanged(...attrs)`
 
 Determine if any of the passed attributes were changed during the last modification.  Example:
 
@@ -583,14 +583,12 @@ var StatefulView = Mn.ItemView.extend({
 
   initialize(options={}) {
     this.state = options.state;
-    Mn.State.syncEntityEvents(this, this.state, this.stateEvents, 'render');
+    this.bindEntityEvents(this, this.state, this.stateEvents, 'render');
   },
 
-  onStateChange(state) {
-    // Only continue if syncing or foo/bar have changed.
-    if (state.hasChanged() && !state.hasAnyChanged('foo', 'bar')) {
-      return;
-    }
+  onStateChange(state, options={}) {
+    if (!state.hasAnyChanged('foo', 'bar')) { return; }
+
     if (state.get('foo') && state.get('bar')) {
       this.$el.addClass('is-foo-bar');
     } else {
@@ -610,7 +608,32 @@ Unbind `componentEvents` from `component` and stop listening to component `'dest
 
 ##### `syncEntityEvents(entity, bindings, event)`
 
-Registers event bindings `bindings` with `entity` using [`Mn.bindEntityEvents`](https://github.com/marionettejs/backbone.marionette/blob/master/docs/marionette.functions.md#marionettebindentityevents) using this State as context.  Ensures initial state is synchronized with this State by calling `bindings` handlers whenever this State fires `event`, or else calls `bindings` handlers immediately if `event` is undefined.
+Registers event bindings `bindings` with `entity` using this State as context.  Ensures initial state is synchronized with this State by calling `bindings` handlers whenever this State fires `event`, or else calls `bindings` handlers immediately if `event` is undefined.  The standard event `options` object will contain the value `syncing: true` to indicate the call was made during a sync rather than an entity event.
+
+```js
+var State = Mn.State.extend({
+  entityEvents: {
+    'change:foo': 'onChangeFoo'
+  }
+
+  initialize() {
+    this.entity = new Backbone.Model({
+      foo: true
+    });
+    this.syncEntityEvents(this, this.entity, this.entityEvents);
+  },
+
+  onChangeFoo(entity, foo, options={}) {
+    if (foo) {
+      this.$el.addClass('foo');
+    } else {
+      this.$el.removeClass('foo');
+    }
+  }
+);
+```
+
+See State Functions API [#syncEntityEvents](syncEntityEvents-target-entity-bindings-event). 
 
 ### Events
 
@@ -628,7 +651,7 @@ Fired when a specific attribute is updated.
 
 ##### `syncEntityEvents(target, entity, bindings, event)`
 
-Registers event bindings `bindings` with `entity` using [`Mn.bindEntityEvents`](https://github.com/marionettejs/backbone.marionette/blob/master/docs/marionette.functions.md#marionettebindentityevents) using `target` as context.  Ensures initial state is synchronized with `target` by calling `bindings` handlers whenever `target` fires `event`, or else calls `bindings` handlers immediately if `event` is undefined.
+Registers event bindings `bindings` with `entity` using [`Mn.bindEntityEvents`](https://github.com/marionettejs/backbone.marionette/blob/master/docs/marionette.functions.md#marionettebindentityevents) using `target` as context.  Ensures initial state is synchronized with `target` by calling `bindings` handlers whenever `target` fires `event`, or else calls `bindings` handlers immediately if `event` is undefined.  The standard event `options` object will contain the value `syncing: true` to indicate the call was made during a sync rather than an entity event.
 
 ##### Example without syncEntityEvents
 
@@ -645,7 +668,7 @@ var View = Mn.ItemView.extend({
     this.bindEntityEvents(this.entity, this.entityEvents);
   },
 
-  onChangeFoo(entity, foo) {
+  onChangeFoo(entity, foo, options={}) {
     if (foo) {
       this.$el.addClass('foo');
     } else {
@@ -654,7 +677,7 @@ var View = Mn.ItemView.extend({
   },
 
   onRender() {
-    this.onChangeFoo(this.entity, this.entity.get('foo'));
+    this.onChangeFoo(this.entity, this.entity.get('foo'), { syncing: true });
   }
 });
 ```
@@ -674,7 +697,7 @@ var View = Mn.ItemView.extend({
     Mn.State.syncEntityEvents(this, this.entity, this.entityEvents, 'render');
   },
 
-  onChangeFoo(entity, foo) {
+  onChangeFoo(entity, foo, options={}) {
     if (foo) {
       this.$el.addClass('foo');
     } else {
@@ -704,27 +727,28 @@ Notably, Collection `'add'` and `'remove'` event handlers will not be synchroniz
 
 ##### Handling Multiple change:{attribute} Events
 
-Just like Backbone, all handlers will be called for all supported events on sync.  In the following binding, `handler` will be called twice on sync--once with the value of `foo` and once with the value of `bar`:
+Just like Backbone, all handlers will be called for all supported events on sync.  In the following binding, `onChangeFooBar` will be called twice on sync--once with the value of `foo` and once with the value of `bar`, similarly to if both foo and bar had changed at once.
 
 ```js
-{ 'change:foo change:bar': 'handler' }
+modelEvents: { 'change:foo change:bar': 'onChangeFooBar' }
 ```
 
-Because handlers called multiple times for a single sync is probably not desired behavior, the best practise to synchronize multiple attributes with a single handler is the same as standard Backbone: Listen for `change` and check `model.changed` for particular attributes.  The only addition is a check for changed
+Because handlers called multiple times for a single sync is probably not desired behavior, the best practise to synchronize multiple attributes with a single handler is the same as standard Backbone: Listen for `change` and check `model.changed` for the presence particular attributes.  The only addition is to check for whether handler was called during a sync.
 
 ```js
-modelEvents: { 'change': 'handler' },
+modelEvents: { 'change': 'onChange' },
 
 initialize() {
   var model = new Backbone.Model();
   Mn.State.syncEntityEvents(this, model, this.modelEvents);
 },
 
-handler(model) {
-  var changed = model.changedAttributes();
-  if (changed && (!_.isUndefined(changed.foo) || !_.isUndefined(changed.bar)) {
-    return;
-  }
+onChange(model, options={}) {
+  var syncOrChange = options.syncing ||
+      !_.isUndefined(model.changed.foo) ||
+      !_.isUndefined(model.changed.bar);
+  if (!syncOrChange) { return; }
+
   // Either syncing or foo/bar have changed
 }
 ```
@@ -732,17 +756,17 @@ handler(model) {
 When synchronizing with a State instance, this can become:
 
 ```js
-stateEvents: { 'change': 'handler' },
+stateEvents: { 'change': 'onChange' },
 
 initialize() {
   var state = new Mn.State();
   Mn.State.syncEntityEvents(this, state, this.stateEvents);
 },
 
-handler(state) {
-  if (state.hasChanged() && !state.hasAnyChanged('foo', 'bar')) {
-    return;
-  }
+onChange(state, options={}) {
+  var syncOrChange = options.syncing || state.hasAnyChanged('foo', 'bar');
+  if (!syncOrChange) { return; }
+
   // Either syncing or foo/bar have changed
 }
 ```
