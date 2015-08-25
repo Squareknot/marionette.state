@@ -17,6 +17,13 @@ const config = manifest.babelBoilerplateOptions;
 const mainFile = manifest.main;
 const destinationFolder = path.dirname(mainFile);
 const exportFileName = path.basename(mainFile, path.extname(mainFile));
+const banner = [
+  '/*',
+  ' * <%= manifest.name %> - <%= manifest.description %>',
+  ' * v<%= manifest.version %>',
+  ' */',
+  ''
+].join('\n');
 
 // Remove the built files
 gulp.task('clean', function (cb) {
@@ -54,7 +61,6 @@ createLintTask('lint-src', ['src/**/*.js']);
 createLintTask('lint-test', ['test/**/*.js']);
 
 // Build two versions of the library
-// TODO: Add versioned banner.
 gulp.task('build', ['lint-src', 'clean'], function (done) {
   esperanto.bundle({
     base:  'src',
@@ -75,10 +81,12 @@ gulp.task('build', ['lint-src', 'clean'], function (done) {
       .pipe($.plumber())
       .pipe($.sourcemaps.init({ loadMaps: true }))
       .pipe($.babel({ blacklist: ['useStrict'] }))
+      .pipe($.header(banner, { manifest : manifest }))
       .pipe($.sourcemaps.write('./', { addComment: false }))
       .pipe(gulp.dest(destinationFolder))
       .pipe($.filter(['*', '!**/*.js.map']))
       .pipe($.rename(exportFileName + '.min.js'))
+      .pipe($.header(banner, { manifest : manifest }))
       .pipe($.sourcemaps.init({ loadMaps: true }))
       .pipe($.uglify())
       .pipe($.sourcemaps.write('./'))

@@ -3,7 +3,8 @@
   "version": "0.3.0",
   "homepage": "https://github.com/Squareknot/marionette.state",
   "authors": [
-    "ianmstew <ianmstew@gmail.com>"
+    "ianmstew <ianmstew@gmail.com>",
+    "yurkaninryan <yurkaninryan@gmail.com>"
   ],
   "description": "One-way state architecture for a Marionette.js app.",
   "main": "build/marionette.state.js",
