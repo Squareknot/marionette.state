@@ -1,3 +1,11 @@
+v0.4.0 [Commit Log](https://github.com/Squareknot/marionette.state/compare/v0.3.0...v0.4.0)
+
+- `syncEnityEvents()` passes `{ syncing: true }` option to change handlers when called during a sync.
+- `#attributes` method returns clone of State attributes.
+- `#previous` proxies to underlying model `#previous`
+- `#getChanged`/`#getPrevious` underlying model proxy methods renamed to `#changedAttributes`/`#previousAttributes` (**breaking**)
+- 100% test coverage
+
 v0.3.0 [Commit Log](https://github.com/Squareknot/marionette.state/compare/v0.2.3...v0.3.0)
 
 - API Improvements

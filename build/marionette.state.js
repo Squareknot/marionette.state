@@ -1,10 +1,14 @@
+/*
+ * marionette.state - One-way state architecture for a Marionette.js app.
+ * v0.4.0
+ */
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('underscore'), require('backbone'), require('backbone.marionette')) : typeof define === 'function' && define.amd ? define(['underscore', 'backbone', 'backbone.marionette'], factory) : global.Marionette.State = factory(global._, global.Backbone, global.Mn);
-})(this, function (_, Backbone, Mn) {
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('underscore'), require('backbone'), require('backbone.marionette')) : typeof define === 'function' && define.amd ? define(['underscore', 'backbone', 'backbone.marionette'], factory) : global.Marionette.State = factory(global._, global.Bb, global.Mn);
+})(this, function (_, Bb, Mn) {
   'use strict';
 
   var State = Mn.Object.extend({
@@ -35,14 +39,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     //   preventDestroy: {boolean} If true, then this will not destroy on `component` destroy.
     // }
     constructor: function constructor() {
-      var _ref = arguments[0] === undefined ? {} : arguments[0];
+      var _ref = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
       var initialState = _ref.initialState;
       var component = _ref.component;
       var preventDestroy = _ref.preventDestroy;
 
       // State model class is either passed in, on the class, or a standard Backbone model
-      this.modelClass = this.modelClass || Backbone.Model;
+      this.modelClass = this.modelClass || Bb.Model;
 
       // Initialize state
       this._initState(initialState);
@@ -59,15 +63,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       // Set initial state.
       this._initialState = _.extend({}, this.defaultState, attrs);
 
-      if (this._model) {
-        // Reset existing model with initial state.
-        this.reset();
-      } else {
-        // Create new model with initial state.
-        /* eslint-disable new-cap */
-        this._model = new this.modelClass(this._initialState);
-        this._proxyModelEvents(this._model);
-      }
+      // Create new model with initial state.
+      /* eslint-disable new-cap */
+      this._model = new this.modelClass(this._initialState);
+      this._proxyModelEvents(this._model);
     },
 
     // Return the state model.
@@ -100,57 +99,51 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       return this;
     },
 
+    attributes: function attributes() {
+      return _.clone(this._model.attributes);
+    },
+
     // Proxy to model changedAttributes().
-    getChanged: function getChanged() {
+    changedAttributes: function changedAttributes() {
       return this._model.changedAttributes();
     },
 
+    // Proxy to model previous().
+    previous: function previous(attr) {
+      return this._model.previous(attr);
+    },
+
     // Proxy to model previousAttributes().
-    getPrevious: function getPrevious() {
+    previousAttributes: function previousAttributes() {
       return this._model.previousAttributes();
     },
 
-    // Determine if any of the passed attributes were changed during the last modification.
+    // Whether any of the passed attributes were changed during the last modification
     hasAnyChanged: function hasAnyChanged() {
       for (var _len = arguments.length, attrs = Array(_len), _key = 0; _key < _len; _key++) {
         attrs[_key] = arguments[_key];
       }
 
-      return !!_.chain(this._model.changed).keys().intersection(attrs).size().value();
+      return State.hasAnyChanged.apply(State, [this].concat(attrs));
     },
 
     // Bind `componentEvents` to `component` and cascade destroy to self when component fires
     // 'destroy'.  To prevent self-destroy behavior, pass `preventDestroy: true` as an option.
     bindComponent: function bindComponent(component) {
-      var _ref2 = arguments[1] === undefined ? {} : arguments[1];
+      var _ref2 = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
       var preventDestroy = _ref2.preventDestroy;
 
       this.bindEntityEvents(component, this.componentEvents);
       if (!preventDestroy) {
-        this._bindLifecycle(component);
+        this.listenTo(component, 'destroy', this.destroy);
       }
     },
 
     // Unbind `componentEvents` from `component` and stop listening to component 'destroy' event.
     unbindComponent: function unbindComponent(component) {
       this.unbindEntityEvents(component, this.componentEvents);
-      this._unbindLifecycle(component);
-    },
-
-    // When `component` fires "destroy" event, this State will also destroy.
-    _bindLifecycle: function _bindLifecycle(component) {
-      if (!this._boundDestroy) {
-        this._boundDestroy = this.destroy.bind(this);
-      }
-      this.listenTo(component, 'destroy', this._boundDestroy);
-      return this;
-    },
-
-    // Stop listening to `component` "destroy" event.
-    _unbindLifecycle: function _unbindLifecycle(component) {
-      this.stopListening(component, 'destroy', this._boundDestroy);
-      return this;
+      this.stopListening(component, 'destroy', this.destroy);
     },
 
     // Proxy to StateFunctions#syncEntityEvents.
@@ -173,27 +166,55 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
   var state = State;
 
+  var state_functions = Object.defineProperties({}, {
+    syncEntityEvents: {
+      get: function get() {
+        return syncEntityEvents;
+      },
+      configurable: true,
+      enumerable: true
+    },
+    hasAnyChanged: {
+      get: function get() {
+        return hasAnyChanged;
+      },
+      configurable: true,
+      enumerable: true
+    }
+  });
+
   var modelEventMatcher = /^(?:all|change|change:(.+))$/;
   var collectionEventMatcher = /^(?:all|reset)$/;
   var spaceMatcher = /\s+/;
 
   // Sync individual event binding 'event1' => 'handler1 handler2'.
   function syncBinding(target, entity, event, handlers) {
-    var changeAttrMatch;
-    var collectionMatch = entity instanceof Backbone.Collection && event.match(collectionEventMatcher);
-    var modelMatch = (entity instanceof Backbone.Model || entity instanceof state) && (changeAttrMatch = event.match(modelEventMatcher));
+    var changeOpts = { syncing: true };
+    var modelEventMatch;
+
+    // Only certain model/collection events are syncable.
+    var collectionMatch = entity instanceof Bb.Collection && event.match(collectionEventMatcher);
+    var modelMatch = (entity instanceof Bb.Model || entity instanceof state) && (modelEventMatch = event.match(modelEventMatcher));
     if (!collectionMatch && !modelMatch) {
       return;
     }
 
-    var changeValue = changeAttrMatch && entity.get(changeAttrMatch[1]);
+    // Collect change event arguments.
+    var changeArgs = [entity];
+    var changeAttr;
+    if (modelEventMatch && (changeAttr = modelEventMatch[1])) {
+      changeArgs.push(entity.get(changeAttr));
+    }
+    changeArgs.push(changeOpts);
+
+    // Call change event handler.
     if (_.isFunction(handlers)) {
-      handlers.call(target, entity, changeValue);
+      handlers.apply(target, changeArgs);
     } else {
       var handlerKeys = handlers.split(spaceMatcher);
       for (var i = 0; i < handlerKeys.length; i++) {
         var handlerKey = handlerKeys[i];
-        target[handlerKey](entity, changeValue);
+        target[handlerKey].apply(target, changeArgs);
       }
     }
   }
@@ -221,6 +242,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       this.bindings = bindings;
     }
 
+    // Binds events handlers located on target to an entity using Marionette.bindEntityEvents, and
+    // also "syncs" initial state either immediately or whenever target fires a specific event.
+    //
+    // Initial state is synced by calling certain handlers at a precise moment.  Only the following
+    // entity events will sync their handlers: 'all', 'change', 'change:attr', and 'reset'.
+    //
+    // Returns a Syncing instance.  While syncing handlers are unbound on target destroy, the syncing
+    // instance has a single public method stop() for ceasing syncing on target events early.
+
     _createClass(Syncing, [{
       key: 'stop',
       value: function stop() {
@@ -247,14 +277,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     return Syncing;
   })();
 
-  // Binds events handlers located on target to an entity using Marionette.bindEntityEvents, and
-  // also "syncs" initial state either immediately or whenever target fires a specific event.
-  //
-  // Initial state is synced by calling certain handlers at a precise moment.  Only the following
-  // entity events will sync their handlers: 'all', 'change', 'change:attr', and 'reset'.
-  //
-  // Returns a Syncing instance.  While syncing handlers are unbound on target destroy, the syncing
-  // instance has a single public method stop() for ceasing syncing on target events early.
   function syncEntityEvents(target, entity, bindings, event) {
     var syncing = new Syncing(target, entity, bindings);
     if (event) {
@@ -265,7 +287,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     return syncing;
   }
 
-  state.syncEntityEvents = syncEntityEvents;
+  // Determine if any of the passed attributes were changed during the last modification of `model`.
+  function hasAnyChanged(model) {
+    // Support Marionette.State or Backbone.Model performantly.
+    if (model._model) {
+      model = model._model;
+    }
+
+    for (var _len2 = arguments.length, attrs = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+      attrs[_key2 - 1] = arguments[_key2];
+    }
+
+    return !!_.chain(model.changed).keys().intersection(attrs).size().value();
+  }
+
+  _.extend(state, state_functions);
 
   var index = state;
 
