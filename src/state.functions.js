@@ -3,31 +3,40 @@ import Mn from 'backbone.marionette';
 import Bb from 'backbone';
 import State from './state';
 
-var modelEventMatcher = /^(?:all|change|change:(.+))$/;
-var collectionEventMatcher = /^(?:all|reset)$/;
-var spaceMatcher = /\s+/;
+const modelEventMatcher = /^(?:all|change|change:(.+))$/;
+const collectionEventMatcher = /^(?:all|reset)$/;
+const spaceMatcher = /\s+/;
 
 // Sync individual event binding 'event1' => 'handler1 handler2'.
 function syncBinding(target, entity, event, handlers) {
-  var changeAttrMatch;
-  var collectionMatch =
-    entity instanceof Bb.Collection &&
-    event.match(collectionEventMatcher);
-  var modelMatch =
-    (entity instanceof Bb.Model || entity instanceof State) &&
-    (changeAttrMatch = event.match(modelEventMatcher));
-  if (!collectionMatch && !modelMatch) {
-    return;
-  }
+  var changeOpts = { syncing: true };
+  var modelEventMatch;
 
-  var changeValue = changeAttrMatch && entity.get(changeAttrMatch[1]);
+  // Only certain model/collection events are syncable.
+  var collectionMatch =
+      entity instanceof Bb.Collection &&
+      event.match(collectionEventMatcher);
+  var modelMatch =
+      (entity instanceof Bb.Model || entity instanceof State) &&
+      (modelEventMatch = event.match(modelEventMatcher));
+  if (!collectionMatch && !modelMatch) { return; }
+
+  // Collect change event arguments.
+  var changeArgs = [entity];
+  var changeAttr;
+  if (modelEventMatch && (changeAttr = modelEventMatch[1])) {
+    changeArgs.push(entity.get(changeAttr));
+  }
+  changeArgs.push(changeOpts);
+
+  // Call change event handler.
   if (_.isFunction(handlers)) {
-    handlers.call(target, entity, changeValue);
+    handlers.apply(target, changeArgs);
   } else {
     var handlerKeys = handlers.split(spaceMatcher);
     for (var i = 0; i < handlerKeys.length; i++) {
       var handlerKey = handlerKeys[i];
-      target[handlerKey](entity, changeValue);
+      target[handlerKey].apply(target, changeArgs);
     }
   }
 }
@@ -90,4 +99,15 @@ export function syncEntityEvents(target, entity, bindings, event) {
     syncing._now();
   }
   return syncing;
+}
+
+// Determine if any of the passed attributes were changed during the last modification of `model`.
+export function hasAnyChanged(model, ...attrs) {
+  // Support Marionette.State or Backbone.Model performantly.
+  if (model._model) { model = model._model; }
+  return !!_.chain(model.changed)
+    .keys()
+    .intersection(attrs)
+    .size()
+    .value();
 }
