@@ -1,5 +1,5 @@
 import _ from 'underscore';
-import Backbone from 'backbone';
+import Bb from 'backbone';
 import Mn from 'backbone.marionette';
 
 // Manage state for a component.
@@ -32,7 +32,7 @@ const State = Mn.Object.extend({
   // }
   constructor({ initialState, component, preventDestroy }={}) {
     // State model class is either passed in, on the class, or a standard Backbone model
-    this.modelClass = this.modelClass || Backbone.Model;
+    this.modelClass = this.modelClass || Bb.Model;
 
     // Initialize state
     this._initState(initialState);
@@ -49,15 +49,10 @@ const State = Mn.Object.extend({
     // Set initial state.
     this._initialState = _.extend({}, this.defaultState, attrs);
 
-    if (this._model) {
-      // Reset existing model with initial state.
-      this.reset();
-    } else {
-      // Create new model with initial state.
-      /* eslint-disable new-cap */
-      this._model = new this.modelClass(this._initialState);
-      this._proxyModelEvents(this._model);
-    }
+    // Create new model with initial state.
+    /* eslint-disable new-cap */
+    this._model = new this.modelClass(this._initialState);
+    this._proxyModelEvents(this._model);
   },
 
   // Return the state model.
@@ -90,6 +85,10 @@ const State = Mn.Object.extend({
     return this;
   },
 
+  attributes() {
+    return _.clone(this._model.attributes);
+  },
+
   // Proxy to model changedAttributes().
   changedAttributes() {
     return this._model.changedAttributes();
@@ -115,29 +114,14 @@ const State = Mn.Object.extend({
   bindComponent(component, { preventDestroy }={}) {
     this.bindEntityEvents(component, this.componentEvents);
     if (!preventDestroy) {
-      this._bindLifecycle(component);
+      this.listenTo(component, 'destroy', this.destroy);
     }
   },
 
   // Unbind `componentEvents` from `component` and stop listening to component 'destroy' event.
   unbindComponent(component) {
     this.unbindEntityEvents(component, this.componentEvents);
-    this._unbindLifecycle(component);
-  },
-
-  // When `component` fires "destroy" event, this State will also destroy.
-  _bindLifecycle(component) {
-    if (!this._boundDestroy) {
-      this._boundDestroy = this.destroy.bind(this);
-    }
-    this.listenTo(component, 'destroy', this._boundDestroy);
-    return this;
-  },
-
-  // Stop listening to `component` "destroy" event.
-  _unbindLifecycle(component) {
-    this.stopListening(component, 'destroy', this._boundDestroy);
-    return this;
+    this.stopListening(component, 'destroy', this.destroy);
   },
 
   // Proxy to StateFunctions#syncEntityEvents.
@@ -147,7 +131,7 @@ const State = Mn.Object.extend({
   },
 
   // Convert model events to state events
-  _proxyModelEvents: function (other) {
+  _proxyModelEvents(other) {
     this.listenTo(other, 'all', function () {
       if (arguments.length > 1 && arguments[1] === this._model) {
         // Replace model argument with State

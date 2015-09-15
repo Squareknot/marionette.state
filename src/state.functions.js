@@ -3,9 +3,9 @@ import Mn from 'backbone.marionette';
 import Bb from 'backbone';
 import State from './state';
 
-var modelEventMatcher = /^(?:all|change|change:(.+))$/;
-var collectionEventMatcher = /^(?:all|reset)$/;
-var spaceMatcher = /\s+/;
+const modelEventMatcher = /^(?:all|change|change:(.+))$/;
+const collectionEventMatcher = /^(?:all|reset)$/;
+const spaceMatcher = /\s+/;
 
 // Sync individual event binding 'event1' => 'handler1 handler2'.
 function syncBinding(target, entity, event, handlers) {
