@@ -1,6 +1,7 @@
+import _ from 'underscore';
 import State from './state';
-import { syncEntityEvents } from './state.functions';
+import * as stateFunctions from './state.functions';
 
-State.syncEntityEvents = syncEntityEvents;
+_.extend(State, stateFunctions);
 
 export default State;
