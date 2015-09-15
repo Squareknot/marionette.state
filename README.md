@@ -561,11 +561,15 @@ Proxy to model `set(key, val, options)`.
 
 Resets model to its attributes at initialization.  If any `attrs` are provided, they will override the initial value.  `options` are passed to the underlying model `#set`.
 
-##### `getChanged()`
+##### `attributes()`
+
+Return a copy of the current state attributes.
+
+##### `changedAttributes()`
 
 Proxy to model `changedAttributes()`.
 
-##### `getPrevious()`
+##### `previousAttributes()`
 
 Proxy to model `previousAttributes()`.
 
