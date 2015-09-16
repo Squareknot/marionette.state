@@ -1,0 +1,7 @@
+languages:
+  JavaScript: true
+engines:
+  eslint:
+    enabled: true
+exclude_paths:
+- "build/*"
