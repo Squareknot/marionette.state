@@ -6,6 +6,7 @@ One-way state architecture for a Marionette.js app.
 [![Build Status](https://travis-ci.org/Squareknot/marionette.state.svg)](https://travis-ci.org/Squareknot/marionette.state)
 [![Test Coverage](https://codeclimate.com/github/Squareknot/marionette.state/badges/coverage.svg)](https://codeclimate.com/github/Squareknot/marionette.state/coverage)
 [![Code Climate](https://codeclimate.com/github/Squareknot/marionette.state/badges/gpa.svg)](https://codeclimate.com/github/Squareknot/marionette.state)
+[![Dependency Status](https://david-dm.org/Squareknot/marionette.state.svg)](https://david-dm.org/Squareknot/marionette.state)
 
 ## Installation
 
