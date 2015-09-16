@@ -20,12 +20,7 @@
     "data",
     "binding"
   ],
-  "licenses": [
-    {
-      "type": "MIT",
-      "url": "https://github.com/Squareknot/marionette.state/blob/master/LICENSE"
-    }
-  ],
+  "license": "MIT",
   "scripts": {
     "test": "node_modules/.bin/gulp test",
     "test-browser": "node_modules/.bin/gulp test-browser",
@@ -37,9 +32,10 @@
     "email": "ianmstew@gmail.com",
     "web": "https://ianmstew.com"
   },
-  "contributors": [
-    { "name": "Ryan Yurkanin", "url": "http://ryanyurkan.in", "email":" yurkaninryan@gmail.com" }
-  ],
+  "contributors": [{
+    "name": "Ryan Yurkanin",
+    "email":" yurkaninryan@gmail.com"
+  }],
   "bugs": {
     "url": "https://github.com/Squareknot/marionette.state/issues"
   },
@@ -49,9 +45,9 @@
   },
   "github": "https://github.com/Squareknot/marionette.state.git",
   "dependencies": {
-    "backbone": "1.0.0 - 1.1.2",
-    "backbone.marionette": "2.1.0 - 2.4.1",
-    "underscore": "1.4.4 - 1.6.0"
+    "backbone": "1.0.0 - 1.2.3",
+    "backbone.marionette": "^2.1.0",
+    "underscore": "1.4.4 - 1.8.3"
   },
   "devDependencies": {
     "babel": "^5.0.0",
