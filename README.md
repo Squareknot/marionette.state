@@ -153,7 +153,7 @@ var ToggleView = Mn.ItemView.extend({
 
 var toggleView = new ToggleView();
 
-var appRegion = new Region({ el: '#app-region' });
+var appRegion = new Mn.Region({ el: '#app-region' });
 appRegion.show(toggleView);
 ```
 
@@ -240,7 +240,7 @@ var appChannel = Radio.channel('app');
 var appState = new AppState({ component: appChannel });
 var toggleAuthView = new ToggleAuthView({ appState: appState });
 
-var appRegion = new Region({ el: '#app-region' });
+var appRegion = new Mn.Region({ el: '#app-region' });
 appRegion.show(toggleAuthView);
 ```
 
@@ -350,7 +350,7 @@ var appChannel = Radio.channel('app');
 var appState = new AppState({ component: appChannel });
 var toggleAuthView = new ToggleAuthView({ appState: appState });
 
-var appRegion = new Region({ el: '#app-region' });
+var appRegion = new Mn.Region({ el: '#app-region' });
 appRegion.show(toggleAuthView);
 ```
 
@@ -498,7 +498,7 @@ var appController = new AppController();
 var appState = appController.getState();
 var toggleAuthView = new ToggleAuthView({ appState: appState });
 
-var appRegion = new Region({ el: '#app-region' });
+var appRegion = new Mn.Region({ el: '#app-region' });
 appRegion.show(toggleAuthView);
 ```
 
@@ -592,7 +592,7 @@ var StatefulView = Mn.ItemView.extend({
 
   initialize(options={}) {
     this.state = options.state;
-    this.bindEntityEvents(this, this.state, this.stateEvents, 'render');
+    this.bindEntityEvents(this, this.state, this.stateEvents);
   },
 
   onStateChange(state, options={}) {
@@ -753,9 +753,7 @@ initialize() {
 },
 
 onChange(model, options={}) {
-  var syncOrChange = options.syncing ||
-      !_.isUndefined(model.changed.foo) ||
-      !_.isUndefined(model.changed.bar);
+  var syncOrChange = options.syncing || Mn.State.hasAnyChanged(model, 'foo', 'bar');
   if (!syncOrChange) { return; }
 
   // Either syncing or foo/bar have changed
