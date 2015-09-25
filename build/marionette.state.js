@@ -167,6 +167,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   var state = State;
 
   var state_functions = Object.defineProperties({}, {
+    sync: {
+      get: function get() {
+        return sync;
+      },
+      configurable: true,
+      enumerable: true
+    },
     syncEntityEvents: {
       get: function get() {
         return syncEntityEvents;
@@ -221,6 +228,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
   // Sync bindings hash { 'event1 event 2': 'handler1 handler2' }.
   function sync(target, entity, bindings) {
+    if (!entity) {
+      throw new Mn.Error('`entity` must be provided.');
+    }
+    if (!bindings) {
+      throw new Mn.Error('`bindings` must be provided.');
+    }
     for (var eventStr in bindings) {
       var handlers = bindings[eventStr];
       var events = eventStr.split(spaceMatcher);
