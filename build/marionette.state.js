@@ -7,8 +7,8 @@ var _createClass = (function () { function defineProperties(target, props) { for
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('underscore'), require('backbone'), require('backbone.marionette')) : typeof define === 'function' && define.amd ? define(['underscore', 'backbone', 'backbone.marionette'], factory) : global.Marionette.State = factory(global._, global.Bb, global.Mn);
-})(this, function (_, Bb, Mn) {
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('underscore'), require('backbone.marionette'), require('backbone')) : typeof define === 'function' && define.amd ? define(['underscore', 'backbone.marionette', 'backbone'], factory) : global.Marionette.State = factory(global._, global.Mn, global.Bb);
+})(this, function (_, Mn, Bb) {
   'use strict';
 
   var State = Mn.Object.extend({
@@ -44,6 +44,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       var initialState = _ref.initialState;
       var component = _ref.component;
       var preventDestroy = _ref.preventDestroy;
+
+      Object.defineProperty(this, 'attributes', {
+        get: function get() {
+          return this._model.attributes;
+        },
+        set: function set(attributes) {
+          this._model.attributes = attributes;
+        }
+      });
 
       // State model class is either passed in, on the class, or a standard Backbone model
       this.modelClass = this.modelClass || Bb.Model;
@@ -97,10 +106,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       var resetAttrs = _.extend({}, this._initialState, attrs);
       this._model.set(resetAttrs, options);
       return this;
-    },
-
-    attributes: function attributes() {
-      return _.clone(this._model.attributes);
     },
 
     // Proxy to model changedAttributes().
