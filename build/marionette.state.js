@@ -1,6 +1,6 @@
 /*
  * marionette.state - One-way state architecture for a Marionette.js app.
- * v0.4.1
+ * v1.0.0
  */
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
@@ -45,7 +45,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       var component = _ref.component;
       var preventDestroy = _ref.preventDestroy;
 
-      // State model class is either passed in, on the class, or a standard Backbone model
+      Object.defineProperty(this, 'attributes', {
+        get: function get() {
+          return this._model.attributes;
+        },
+        set: function set(attributes) {
+          this._model.attributes = attributes;
+        }
+      });
+
+      // State model class is either a class option or is a standard Backbone model
       this.modelClass = this.modelClass || Backbone.Model;
 
       // Initialize state
@@ -97,10 +106,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       var resetAttrs = _.extend({}, this._initialState, attrs);
       this._model.set(resetAttrs, options);
       return this;
-    },
-
-    attributes: function attributes() {
-      return _.clone(this._model.attributes);
     },
 
     // Proxy to model changedAttributes().
@@ -167,6 +172,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   var state = State;
 
   var state_functions = Object.defineProperties({}, {
+    sync: {
+      get: function get() {
+        return sync;
+      },
+      configurable: true,
+      enumerable: true
+    },
     syncEntityEvents: {
       get: function get() {
         return syncEntityEvents;
@@ -221,6 +233,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
   // Sync bindings hash { 'event1 event 2': 'handler1 handler2' }.
   function sync(target, entity, bindings) {
+    if (!entity) {
+      throw new Error('`entity` must be provided.');
+    }
+    if (!bindings) {
+      throw new Error('`bindings` must be provided.');
+    }
     for (var eventStr in bindings) {
       var handlers = bindings[eventStr];
       var events = eventStr.split(spaceMatcher);

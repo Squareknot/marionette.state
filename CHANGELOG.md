@@ -1,7 +1,12 @@
+v1.0.0 [Commit Log](https://github.com/Squareknot/marionette.state/compare/v0.4.0...v1.0.0)
+
+- `sync()` method elevated to Functions API to enable finer-grained synchronization use cases.
+- `attributes()` method removed in favor of ES5 property proxy to underlying model.attributes.  This enables a State instance to be used directly as a `model` property in a Marionette view. (**breaking**)
+
 v0.4.1 [Commit Log](https://github.com/Squareknot/marionette.state/compare/v0.4.0...v0.4.1)
 
-- Bumped dependencies to latest Backbone and Underscore
-- Fixed Backbone global import not resolving when including Marionette.State via script tag
+- Bumped dependencies to latest Backbone and Underscore.
+- Fixed Backbone global import not resolving when including Marionette.State via script tag.
 
 v0.4.0 [Commit Log](https://github.com/Squareknot/marionette.state/compare/v0.3.0...v0.4.0)
 
