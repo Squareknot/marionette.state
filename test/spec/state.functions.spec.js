@@ -175,6 +175,33 @@ describe('State Functions', () => {
       });
     });
 
+    describe('when syncing with missing parameters', () => {
+      var stateful;
+
+      beforeEach(() => {
+        var Stateful = AbstractStateful.extend({
+          syncWithoutBindings() {
+            Mn.State.syncEntityEvents(this, this.state, null);
+          },
+
+          syncWithoutEntity() {
+            Mn.State.syncEntityEvents(this, null, this.stateEvents);
+          }
+        });
+        stateful = new Stateful();
+        sinon.spy(stateful, 'syncWithoutBindings');
+        sinon.spy(stateful, 'syncWithoutEntity');
+      });
+
+      it('should throw an exception without bindings', () => {
+        expect(() => stateful.syncWithoutBindings()).to.throw('`bindings` must be provided.');
+      });
+
+      it('should throw an exception without entity', () => {
+        expect(() => stateful.syncWithoutEntity()).to.throw('`entity` must be provided.');
+      });
+    });
+
     describe('when syncing on a target event', () => {
       var stateful;
 
