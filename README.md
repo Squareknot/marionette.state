@@ -516,7 +516,7 @@ Within a deeply nested, complex view that requires a deeper layer of state, perh
 
 ## State API
 
-### Class Properties
+### Initialization Properties
 
 ##### `defaultState`
 
@@ -544,6 +544,12 @@ Optional evented object to which to bind lifecycle and events.  The `componentEv
 
 Only applies when `component` is provided.  By default, the State instance will destruct when `component` fires `'destroy'`, but `{preventDestroy: true}` will prevent this behavior.
 
+### Properties
+
+##### `attributes`
+
+Proxy to model `attributes` property.  This permits a State instance to be used in place of a Backbone.Model within a Marionette view.
+
 ### Methods
 
 ##### `getModel()`
@@ -566,10 +572,6 @@ Proxy to model `set(key, val, options)`.
 
 Resets model to its attributes at initialization.  If any `attrs` are provided, they will override the initial value.  `options` are passed to the underlying model `#set`.
 
-##### `attributes()`
-
-Return a copy of the current state attributes.
-
 ##### `changedAttributes()`
 
 Proxy to model `changedAttributes()`.
@@ -580,7 +582,7 @@ Proxy to model `previousAttributes()`.
 
 ##### `hasAnyChanged(...attrs)`
 
-Determine if any of the passed attributes were changed during the last modification.  Example:
+Determine if any of the passed attributes were changed during the last modification.
 
 ```js
 var StatefulView = Mn.ItemView.extend({
@@ -595,7 +597,7 @@ var StatefulView = Mn.ItemView.extend({
     this.bindEntityEvents(this, this.state, this.stateEvents);
   },
 
-  onStateChange(state, options={}) {
+  onStateChange(state) {
     if (!state.hasAnyChanged('foo', 'bar')) { return; }
 
     if (state.get('foo') && state.get('bar')) {
@@ -617,7 +619,7 @@ Unbind `componentEvents` from `component` and stop listening to component `'dest
 
 ##### `syncEntityEvents(entity, bindings, event)`
 
-Registers event bindings `bindings` with `entity` using this State as context.  Ensures initial state is synchronized with this State by calling `bindings` handlers whenever this State fires `event`, or else calls `bindings` handlers immediately if `event` is undefined.  The standard event `options` object will contain the value `syncing: true` to indicate the call was made during a sync rather than an entity event.
+See [`syncEntityEvents`](#syncEntityEvents-target-entity-bindings-event))
 
 ```js
 var State = Mn.State.extend({
@@ -632,7 +634,7 @@ var State = Mn.State.extend({
     this.syncEntityEvents(this, this.entity, this.entityEvents);
   },
 
-  onChangeFoo(entity, foo, options={}) {
+  onChangeFoo(entity, foo) {
     if (foo) {
       this.$el.addClass('foo');
     } else {
@@ -658,9 +660,51 @@ Fired when a specific attribute is updated.
 
 ## State Functions API
 
+##### `sync(target, entity, bindings)`
+
+Calls Backbone entity event handlers in `bindings` located on `target` with standard [Backbone event arguments](http://backbonejs.org/#Events-catalog).  This is useful to apply event handlers without waiting for a change, such as for synchronization purposes.  The following event handlers will be synced, and no others:
+
+```
+Backbone.Model
+  'all'                (model)
+  'change'             (model)
+  'change:{attribute}' (model, value)
+
+Backbone.Collection
+  'all'                (collection)
+  'reset'              (collection)
+  'change'             (collection)
+```
+
+Notably, Collection `'add'` and `'remove'` event handlers will not be synchronized, because `'add'` and `'remove'` do not have a backing value (the added or removed element is not known until the event occurs).  However, `'add remove reset'` is syncable and also tracks with changes in the collection.
+
+##### `hasAnyChanged(entity, ...attrs)`
+
+Determine if any of the passed attributes were changed during the last modification.
+
+```js
+var MyView = Mn.ItemView.extend({
+  template: false,
+
+  modelEvents: {
+    'change': 'onChange'
+  },
+
+  onChange(model) {
+    if (!Mn.State.hasAnyChanged(model, 'foo', 'bar')) { return; }
+
+    if (state.get('foo') && state.get('bar')) {
+      this.$el.addClass('is-foo-bar');
+    } else {
+      this.$el.removeClass('is-foo-bar');
+    }
+  }
+});
+```
+
 ##### `syncEntityEvents(target, entity, bindings, event)`
 
-Registers event bindings `bindings` with `entity` using [`Mn.bindEntityEvents`](https://github.com/marionettejs/backbone.marionette/blob/master/docs/marionette.functions.md#marionettebindentityevents) using `target` as context.  Ensures initial state is synchronized with `target` by calling `bindings` handlers whenever `target` fires `event`, or else calls `bindings` handlers immediately if `event` is undefined.  The standard event `options` object will contain the value `syncing: true` to indicate the call was made during a sync rather than an entity event.
+Registers event bindings `bindings` with `entity` using [`Mn.bindEntityEvents`](https://github.com/marionettejs/backbone.marionette/blob/master/docs/marionette.functions.md#marionettebindentityevents) using `target` as context, and then synchronizes using [`sync()`](#sync-target-entity-bindings).  If `event` is supplied, rather than syncing immediately, syncing will occur on every firing of `event` by `target`.  This is useful for syncing a model to DOM within a View, for example.  The standard event `options` object will contain the value `syncing: true` to indicate the call was made during a sync rather than an entity event.
 
 ##### Example without syncEntityEvents
 
@@ -677,7 +721,7 @@ var View = Mn.ItemView.extend({
     this.bindEntityEvents(this.entity, this.entityEvents);
   },
 
-  onChangeFoo(entity, foo, options={}) {
+  onChangeFoo(entity, foo) {
     if (foo) {
       this.$el.addClass('foo');
     } else {
@@ -706,7 +750,7 @@ var View = Mn.ItemView.extend({
     Mn.State.syncEntityEvents(this, this.entity, this.entityEvents, 'render');
   },
 
-  onChangeFoo(entity, foo, options={}) {
+  onChangeFoo(entity, foo) {
     if (foo) {
       this.$el.addClass('foo');
     } else {
@@ -715,24 +759,6 @@ var View = Mn.ItemView.extend({
   }
 );
 ```
-
-##### Syncable Events
-
-Event handlers are called with standard [Backbone event arguments](http://backbonejs.org/#Events-catalog).  Only the following event bindings will be synchronized.
-
-```
-Backbone.Model
-  'all'                (model)
-  'change'             (model)
-  'change:{attribute}' (model, value)
-
-Backbone.Collection
-  'all'                (collection)
-  'reset'              (collection)
-  'change'             (collection)
-```
-
-Notably, Collection `'add'` and `'remove'` event handlers will not be synchronized, because `'add'` and `'remove'` do not have a backing value (the added or removed element is not known until the event occurs).  However, `'add remove reset'` is syncable and also tracks with changes in the collection.
 
 ##### Handling Multiple change:{attribute} Events
 

@@ -42,7 +42,9 @@ function syncBinding(target, entity, event, handlers) {
 }
 
 // Sync bindings hash { 'event1 event 2': 'handler1 handler2' }.
-function sync(target, entity, bindings) {
+export function sync(target, entity, bindings) {
+  if (!entity) { throw new Error('`entity` must be provided.'); }
+  if (!bindings) { throw new Error('`bindings` must be provided.'); }
   for (var eventStr in bindings) {
     var handlers = bindings[eventStr];
     var events = eventStr.split(spaceMatcher);
