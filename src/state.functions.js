@@ -1,6 +1,6 @@
 import _ from 'underscore';
 import Mn from 'backbone.marionette';
-import Bb from 'backbone';
+import Backbone from 'backbone';
 import State from './state';
 
 const modelEventMatcher = /^(?:all|change|change:(.+))$/;
@@ -14,10 +14,10 @@ function syncBinding(target, entity, event, handlers) {
 
   // Only certain model/collection events are syncable.
   var collectionMatch =
-      entity instanceof Bb.Collection &&
+      entity instanceof Backbone.Collection &&
       event.match(collectionEventMatcher);
   var modelMatch =
-      (entity instanceof Bb.Model || entity instanceof State) &&
+      (entity instanceof Backbone.Model || entity instanceof State) &&
       (modelEventMatch = event.match(modelEventMatcher));
   if (!collectionMatch && !modelMatch) { return; }
 

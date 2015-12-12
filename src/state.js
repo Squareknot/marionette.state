@@ -1,5 +1,5 @@
 import _ from 'underscore';
-import Bb from 'backbone';
+import Backbone from 'backbone';
 import Mn from 'backbone.marionette';
 
 // Manage state for a component.
@@ -32,7 +32,7 @@ const State = Mn.Object.extend({
   // }
   constructor({ initialState, component, preventDestroy }={}) {
     // State model class is either passed in, on the class, or a standard Backbone model
-    this.modelClass = this.modelClass || Bb.Model;
+    this.modelClass = this.modelClass || Backbone.Model;
 
     // Initialize state
     this._initState(initialState);
