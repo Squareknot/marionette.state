@@ -31,7 +31,16 @@ const State = Mn.Object.extend({
   //   preventDestroy: {boolean} If true, then this will not destroy on `component` destroy.
   // }
   constructor({ initialState, component, preventDestroy }={}) {
-    // State model class is either passed in, on the class, or a standard Backbone model
+    Object.defineProperty(this, 'attributes', {
+      get: function () {
+        return this._model.attributes;
+      },
+      set: function (attributes) {
+        this._model.attributes = attributes;
+      }
+    });
+
+    // State model class is either a class option or is a standard Backbone model
     this.modelClass = this.modelClass || Backbone.Model;
 
     // Initialize state
@@ -83,10 +92,6 @@ const State = Mn.Object.extend({
     var resetAttrs = _.extend({}, this._initialState, attrs);
     this._model.set(resetAttrs, options);
     return this;
-  },
-
-  attributes() {
-    return _.clone(this._model.attributes);
   },
 
   // Proxy to model changedAttributes().

@@ -516,7 +516,7 @@ Within a deeply nested, complex view that requires a deeper layer of state, perh
 
 ## State API
 
-### Class Properties
+### Initialization Properties
 
 ##### `defaultState`
 
@@ -544,6 +544,12 @@ Optional evented object to which to bind lifecycle and events.  The `componentEv
 
 Only applies when `component` is provided.  By default, the State instance will destruct when `component` fires `'destroy'`, but `{preventDestroy: true}` will prevent this behavior.
 
+### Properties
+
+##### `attributes`
+
+Proxy to model `attributes` property.  This permits a State instance to be used in place of a Backbone.Model within a Marionette view.
+
 ### Methods
 
 ##### `getModel()`
@@ -565,10 +571,6 @@ Proxy to model `set(key, val, options)`.
 ##### `reset(attrs, options)`
 
 Resets model to its attributes at initialization.  If any `attrs` are provided, they will override the initial value.  `options` are passed to the underlying model `#set`.
-
-##### `attributes()`
-
-Return a copy of the current state attributes.
 
 ##### `changedAttributes()`
 

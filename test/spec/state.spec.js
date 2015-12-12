@@ -45,7 +45,7 @@ describe('State', () => {
     });
 
     it('should reflect initial state', () => {
-      expect(fooState.attributes()).to.deep.equal({ foo: 1 });
+      expect(fooState.attributes).to.deep.equal({ foo: 1 });
     });
   });
 
@@ -70,7 +70,7 @@ describe('State', () => {
     });
 
     it('initial state should reflect both defaultState and initialState', () => {
-      expect(fooState.attributes()).to.deep.equal({
+      expect(fooState.attributes).to.deep.equal({
         foo: 1,
         bar: -2,
         baz: 3
@@ -114,7 +114,7 @@ describe('State', () => {
       });
 
       it('should reflect the overriden attribute', () => {
-        expect(fooState.attributes()).to.deep.equal(updatedState);
+        expect(fooState.attributes).to.deep.equal(updatedState);
       });
     });
   });
@@ -249,6 +249,34 @@ describe('State', () => {
       it('should reflect the change in `hasAnyChanged()`', () => {
         expect(fooState.hasAnyChanged('foo')).to.equal(true);
       });
+    });
+  });
+
+  describe('when updating attributes proxy property', () => {
+    var fooState;
+    var fooStateAttributes = { foo: 'bar' };
+
+    beforeEach(() => {
+      fooState = new Mn.State();
+      fooState.attributes = fooStateAttributes;
+    });
+
+    it('model should reflect change', () => {
+      expect(fooState.getModel().attributes).to.deep.equal(fooStateAttributes);
+    });
+  });
+
+  describe('when updating model attributes property', () => {
+    var fooState;
+    var fooStateAttributes = { foo: 'bar' };
+
+    beforeEach(() => {
+      fooState = new Mn.State();
+      fooState.getModel().attributes = fooStateAttributes;
+    });
+
+    it('attributes proxy should reflect change', () => {
+      expect(fooState.attributes).to.deep.equal(fooStateAttributes);
     });
   });
 
