@@ -1,14 +1,14 @@
 /*
  * marionette.state - One-way state architecture for a Marionette.js app.
- * v0.4.0
+ * v0.4.1
  */
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('underscore'), require('backbone'), require('backbone.marionette')) : typeof define === 'function' && define.amd ? define(['underscore', 'backbone', 'backbone.marionette'], factory) : global.Marionette.State = factory(global._, global.Bb, global.Mn);
-})(this, function (_, Bb, Mn) {
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('underscore'), require('backbone'), require('backbone.marionette')) : typeof define === 'function' && define.amd ? define(['underscore', 'backbone', 'backbone.marionette'], factory) : global.Marionette.State = factory(global._, global.Backbone, global.Mn);
+})(this, function (_, Backbone, Mn) {
   'use strict';
 
   var State = Mn.Object.extend({
@@ -46,7 +46,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       var preventDestroy = _ref.preventDestroy;
 
       // State model class is either passed in, on the class, or a standard Backbone model
-      this.modelClass = this.modelClass || Bb.Model;
+      this.modelClass = this.modelClass || Backbone.Model;
 
       // Initialize state
       this._initState(initialState);
@@ -193,8 +193,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var modelEventMatch;
 
     // Only certain model/collection events are syncable.
-    var collectionMatch = entity instanceof Bb.Collection && event.match(collectionEventMatcher);
-    var modelMatch = (entity instanceof Bb.Model || entity instanceof state) && (modelEventMatch = event.match(modelEventMatcher));
+    var collectionMatch = entity instanceof Backbone.Collection && event.match(collectionEventMatcher);
+    var modelMatch = (entity instanceof Backbone.Model || entity instanceof state) && (modelEventMatch = event.match(modelEventMatcher));
     if (!collectionMatch && !modelMatch) {
       return;
     }

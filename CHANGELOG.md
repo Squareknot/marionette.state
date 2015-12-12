@@ -1,3 +1,8 @@
+v0.4.1 [Commit Log](https://github.com/Squareknot/marionette.state/compare/v0.4.0...v0.4.1)
+
+- Bumped dependencies to latest Backbone and Underscore
+- Fixed Backbone global import not resolving when including Marionette.State via script tag
+
 v0.4.0 [Commit Log](https://github.com/Squareknot/marionette.state/compare/v0.3.0...v0.4.0)
 
 - `syncEnityEvents()` passes `{ syncing: true }` option to change handlers when called during a sync.
