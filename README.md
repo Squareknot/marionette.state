@@ -14,6 +14,10 @@ Ask questions and discuss stateful architecture on Gitter.
   <img src='https://badges.gitter.im/Join%20Chat.svg' alt='Gitter Chat' />
 </a>
 
+For a brief introduction to Marionette.State and a working example, here are some abbreviated thoughts on using Marionette.State to manage view state as well as an opinion for managing global application state.
+
+https://gist.github.com/ianmstew/d6b5377840d3aaf4e93a
+
 ## Installation
 
 ```
