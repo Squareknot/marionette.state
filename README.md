@@ -8,6 +8,12 @@ One-way state architecture for a Marionette.js app.
 [![Code Climate](https://codeclimate.com/github/Squareknot/marionette.state/badges/gpa.svg)](https://codeclimate.com/github/Squareknot/marionette.state)
 [![Dependency Status](https://david-dm.org/Squareknot/marionette.state.svg)](https://david-dm.org/Squareknot/marionette.state)
 
+Ask questions and discuss stateful architecture on Gitter.
+
+<a href='https://gitter.im/Squareknot/marionette.state'>
+  <img src='https://badges.gitter.im/Join%20Chat.svg' alt='Gitter Chat' />
+</a>
+
 ## Installation
 
 ```
