@@ -609,6 +609,10 @@ var StatefulView = Mn.ItemView.extend({
 });
 ```
 
+##### `toJSON()`
+
+Proxy to `model.toJSON()`.
+
 ##### `bindComponent(component, options)`
 
 Bind `componentEvents` to `component` and self-destruct when `component` fires `'destroy'`.  This prevents a state from outliving its component and causing a memory leak.  To prevent self-destruct behavior, pass `{preventDestroy: true}` as an option.

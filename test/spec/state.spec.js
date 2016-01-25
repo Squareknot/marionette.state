@@ -347,4 +347,26 @@ describe('State', () => {
         .and.to.have.been.calledWith(1, 2, 3);
     });
   });
+
+  describe('when calling toJSON', () => {
+    var fooState;
+    var modelJson;
+    var stateJson;
+
+    beforeEach(() => {
+      fooState = new Mn.State({
+        initialState: {
+          foo: 1,
+          bar: 2
+        }
+      });
+
+      modelJson = fooState.getModel().toJSON();
+      stateJson = fooState.toJSON();
+    });
+
+    it('should equal result of underlying model toJSON()', () => {
+      expect(stateJson).to.deep.equal(modelJson);
+    });
+  });
 });

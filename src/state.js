@@ -114,6 +114,10 @@ const State = Mn.Object.extend({
     return State.hasAnyChanged(this, ...attrs);
   },
 
+  toJSON() {
+    return this._model.toJSON();
+  },
+
   // Bind `componentEvents` to `component` and cascade destroy to self when component fires
   // 'destroy'.  To prevent self-destroy behavior, pass `preventDestroy: true` as an option.
   bindComponent(component, { preventDestroy }={}) {
