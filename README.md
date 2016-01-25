@@ -27,7 +27,7 @@ git clone git://github.com/Squareknot/marionette.state.git
   - [Sub-Applications](#sub-applications)
   - [Sub-Views](#sub-views)
 - [State API](#state-api)
-  - [Class Properties](#class-properties)
+  - [Initialization Properties](#initialization-properties)
   - [Initialization Options](#initialization-options)
   - [Methods](#methods)
   - [Events](#events)
