@@ -1,6 +1,8 @@
 marionette.state
 ================
 
+[![Join the chat at https://gitter.im/Squareknot/marionette.state](https://badges.gitter.im/Squareknot/marionette.state.svg)](https://gitter.im/Squareknot/marionette.state?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 One-way state architecture for a Marionette.js app.
 
 [![Build Status](https://travis-ci.org/Squareknot/marionette.state.svg?branch=master)](https://travis-ci.org/Squareknot/marionette.state)
