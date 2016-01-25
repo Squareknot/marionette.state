@@ -1,7 +1,7 @@
 {
   "name": "marionette.state",
   "description": "One-way state architecture for a Marionette.js app.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "homepage": "https://github.com/Squareknot/marionette.state",
   "main": "build/marionette.state.js",
   "keywords": [

@@ -1,6 +1,6 @@
 /*
  * marionette.state - One-way state architecture for a Marionette.js app.
- * v1.0.0
+ * v1.0.1
  */
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
@@ -130,6 +130,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }
 
       return State.hasAnyChanged.apply(State, [this].concat(attrs));
+    },
+
+    toJSON: function toJSON() {
+      return this._model.toJSON();
     },
 
     // Bind `componentEvents` to `component` and cascade destroy to self when component fires

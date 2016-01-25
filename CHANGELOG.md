@@ -1,3 +1,7 @@
+v1.0.1 [Commit Log](https://github.com/Squareknot/marionette.state/compare/v1.0.0...v1.0.1)
+
+- Added `toJSON()` proxy to underlying model, permitting State instance to be used as Mn view model in 2.x.
+
 v1.0.0 [Commit Log](https://github.com/Squareknot/marionette.state/compare/v0.4.0...v1.0.0)
 
 - `sync()` method elevated to Functions API to enable finer-grained synchronization use cases.
