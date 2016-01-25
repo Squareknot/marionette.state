@@ -1,7 +1,7 @@
 marionette.state
 ================
 
-One-way state architecture for a Marionette.js app.
+Uni-directional state architecture for a Marionette.js app.
 
 [![Build Status](https://travis-ci.org/Squareknot/marionette.state.svg?branch=master)](https://travis-ci.org/Squareknot/marionette.state)
 [![Test Coverage](https://codeclimate.com/github/Squareknot/marionette.state/badges/coverage.svg)](https://codeclimate.com/github/Squareknot/marionette.state/coverage)
